@@ -1,2 +1,9 @@
 venv/
 .DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.log
+*.sqlite3
+.env
+mysql_data/
