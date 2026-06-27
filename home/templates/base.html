@@ -1,0 +1,1133 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}暮雪{% endblock %}</title>
+    <style>
+        :root {
+            /* ===== 暮雪品牌色系 ===== */
+            --first-color: #ffffff;          /* 雪白主背景 */
+            --second-color: #2c3e50;         /* 深蓝灰主文字（柔和于纯黑） */
+            --third-color: #f4f7fb;          /* 雪影浅蓝灰（悬停/次级背景） */
+            --border-light: #e4eaf1;         /* 冰蓝灰边框 */
+            --accent: #5b8cbd;               /* 冰蓝主强调色 */
+            --accent-light: #eaf2f9;         /* 冰蓝浅底 */
+            --snow-shadow: 0 2px 12px rgba(92, 140, 189, 0.08);  /* 雪影蓝调阴影 */
+            --snow-shadow-lg: 0 8px 30px rgba(92, 140, 189, 0.12);
+
+            /* ===== 状态色 ===== */
+            --state-danger: #e74c3c;
+            --state-success-bg: #d4edda;
+            --state-success-text: #155724;
+            --state-link: #5b8cbd;
+
+            /* ===== 弱化 / 次要文本 ===== */
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: var(--first-color);
+            color: var(--second-color);
+        }
+
+        /* 固定顶部菜单栏 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background-color: rgba(255,255,255,0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .navbar-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+        }
+        .navbar-logo {
+            width: 48px;
+            height: 48px;
+            margin-right: 12px;
+            vertical-align: middle;
+        }
+        .navbar-brand {
+            color: var(--second-color);
+            font-size: 32px;
+            font-weight: bold;
+            text-decoration: none;
+            margin-right: 40px;
+        }
+
+        .navbar-menu {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar-item {
+            margin: 0 15px;
+        }
+
+        .navbar-link {
+            color: var(--second-color);
+            text-decoration: none;
+            padding: 10px 20px;
+            transition: background-color 0.2s ease;
+            border-radius: 4px;
+        }
+
+        .navbar-link:hover {
+            background-color: var(--third-color);
+            color: var(--accent);
+        }
+
+        .navbar-link.active {
+            background-color: var(--third-color);
+            color: var(--accent);
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--second-color);
+            font-size: 14px;
+        }
+
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #e9e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--first-color);
+            font-weight: bold;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .user-button {
+            padding: 8px 16px;
+            border: 1px solid var(--border-light);
+            background: var(--first-color);
+            color: var(--second-color);
+            text-decoration: none;
+            border-radius: 20px;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .user-button:hover {
+            background: var(--third-color);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .user-button.primary {
+            border: 1px solid var(--accent);
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .user-button.primary:hover {
+            background: #4a7eae;
+            border-color: #4a7eae;
+            color: #fff;
+        }
+
+        .user-logout {
+            padding: 8px 16px;
+            border: 1px solid var(--border-light);
+            background: var(--first-color);
+            color: var(--second-color);
+            text-decoration: none;
+            border-radius: 20px;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .user-logout:hover {
+            background: var(--third-color);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* 登录注册弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-overlay {
+            cursor: pointer;
+        }
+
+        .modal {
+            cursor: default;
+        }
+
+        .modal {
+            background: var(--first-color);
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--second-color);
+            margin-bottom: 8px;
+        }
+
+        .modal-subtitle {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #bdc3c7;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #f8f9fa;
+            color: #2c3e50;
+        }
+
+        .modal-form {
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--second-color);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--third-color);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .verification-code-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .verification-code-input {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        .verification-code-btn {
+            padding: 8px 16px;
+            background: var(--third-color);
+            color: var(--second-color);
+            border: 2px solid var(--third-color);
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-width: 100px;
+        }
+
+        .verification-code-btn:hover:not(:disabled) {
+            background: var(--first-color);
+            border-color: var(--second-color);
+        }
+
+        .verification-code-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .form-input.error {
+            border-color: #e74c3c;
+        }
+
+        .error-message {
+            color: var(--state-danger);
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .modal-button {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .modal-button:hover {
+            background: #4a7eae;
+        }
+
+        .modal-button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .modal-footer {
+            text-align: center;
+            color: var(--second-color);
+        }
+
+        .modal-link {
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .modal-link:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .loading i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            background: var(--state-success-bg);
+            color: var(--state-success-text);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            width: 100%;
+            margin-top: 60px;
+        }
+
+        /* ===== 页脚 ===== */
+        .site-footer {
+            background: linear-gradient(180deg, #f4f7fb 0%, #eaf2f9 100%);
+            border-top: 1px solid var(--border-light);
+            padding: 3rem 2rem 1.5rem;
+            margin-top: 3rem;
+        }
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+        .footer-col h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--second-color);
+            margin-bottom: 1rem;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+        .footer-col h4::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 32px;
+            height: 2px;
+            background: var(--accent);
+            border-radius: 1px;
+        }
+        .footer-col p,
+        .footer-col a {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.8;
+            text-decoration: none;
+            display: block;
+            transition: color 0.2s;
+        }
+        .footer-col a:hover {
+            color: var(--accent);
+        }
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 2rem auto 0;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-light);
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .footer-bottom .snowflake {
+            display: inline-block;
+            animation: footer-snow 3s ease-in-out infinite;
+        }
+        @keyframes footer-snow {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.6; }
+            50% { transform: translateY(-4px) rotate(180deg); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .footer-inner { grid-template-columns: 1fr; text-align: center; }
+            .footer-col h4::after { left: 50%; transform: translateX(-50%); }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .navbar-container {
+                padding: 0 10px;
+            }
+
+            .navbar-brand {
+                font-size: 18px;
+                margin-right: 20px;
+            }
+
+            .navbar-item {
+                margin: 0 8px;
+            }
+
+            .navbar-link {
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .navbar-item {
+                margin: 5px;
+            }
+
+            .navbar-link {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- 固定顶部菜单栏 -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-left">
+            <a href="{% url 'home' %}" class="navbar-brand"><img src="{% static 'img/logo.png' %}" alt="Logo" class="navbar-logo"></a>
+            <ul class="navbar-menu">
+                <li class="navbar-item">
+                    <a href="{% url 'home' %}" class="navbar-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">首页</a>
+                </li>
+                <li class="navbar-item">
+                    <a href="{% url 'blog' %}" class="navbar-link {% if 'blog' in request.resolver_match.app_names %}active{% endif %}">学习</a>
+                </li>
+                <li class="navbar-item">
+                    <a href="{% url 'download_center' %}" class="navbar-link {% if 'download' in request.resolver_match.app_names %}active{% endif %}">下载</a>
+                </li>
+                <li class="navbar-item">
+                    <a href="{% url 'about' %}" class="navbar-link {% if 'about' in request.resolver_match.app_names %}active{% endif %}">关于</a>
+                </li>
+            </ul>
+            </div>
+            <div class="navbar-right">
+                <div class="user-section" id="user-section">
+                    <!-- 未登录状态 -->
+                    <div class="user-actions" id="guest-actions">
+                        <button class="user-button" onclick="openLogin()">登录</button>
+                        <button class="user-button primary" onclick="openRegister()">注册</button>
+                    </div>
+                    <!-- 已登录状态 -->
+                    <div class="user-info" id="user-info" style="display: none;">
+                        <div class="user-avatar" id="user-avatar">U</div>
+                        <span id="user-name">用户名</span>
+                        <button class="user-logout" onclick="logout()">退出</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-col">
+                <h4><span class="snowflake">❄</span> 暮雪</h4>
+                <p>嵌入式系统学习平台，专注 STM32 / FreeRTOS / Linux 驱动开发与项目实战。</p>
+            </div>
+            <div class="footer-col">
+                <h4>快速导航</h4>
+                <a href="{% url 'blog' %}">📖 学习教程</a>
+                <a href="{% url 'download_center' %}">📥 资源下载</a>
+                <a href="{% url 'about' %}">💬 关于我们</a>
+            </div>
+            <div class="footer-col">
+                <h4>联系方式</h4>
+                <p>📧 muxuemail@163.com</p>
+                <p>🌐 www.muxue.site</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© {% now "Y" %} 暮雪 Muxue <span class="snowflake">❄</span> 雪落无声，代码有痕</p>
+        </div>
+    </footer>
+
+    <!-- 登录弹窗 -->
+    <div class="modal-overlay" id="login-modal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('login-modal')">&times;</button>
+            <div class="modal-header">
+                <h2 class="modal-title">用户登录</h2>
+                <p class="modal-subtitle">欢迎回到暮雪</p>
+            </div>
+            
+            <div class="success-message" id="login-success-message"></div>
+            
+            <form class="modal-form" id="login-form">
+                <div class="form-group">
+                    <label class="form-label" for="login-email">邮箱地址</label>
+                    <input type="email" id="login-email" name="email" class="form-input" required>
+                    <div class="error-message" id="login-email-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="login-password">密码</label>
+                    <input type="password" id="login-password" name="password" class="form-input" required>
+                    <div class="error-message" id="login-password-error"></div>
+                </div>
+
+                <button type="submit" class="modal-button" id="login-button">
+                    登录
+                </button>
+
+                <div class="loading" id="login-loading">
+                    <i class="fa fa-spinner"></i>
+                </div>
+            </form>
+
+            <div class="modal-footer">
+                <p>还没有账号？ <a href="#" class="modal-link" onclick="switchToRegister()">立即注册</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 注册弹窗 -->
+    <div class="modal-overlay" id="register-modal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('register-modal')">&times;</button>
+            <div class="modal-header">
+                <h2 class="modal-title">用户注册</h2>
+                <p class="modal-subtitle">加入暮雪社区</p>
+            </div>
+            
+            <div class="success-message" id="register-success-message"></div>
+            
+            <form class="modal-form" id="register-form">
+                <div class="form-group">
+                    <label class="form-label" for="register-name">用户名</label>
+                    <input type="text" id="register-name" name="name" class="form-input" required>
+                    <div class="error-message" id="register-name-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="register-email">邮箱地址</label>
+                    <input type="email" id="register-email" name="email" class="form-input" required>
+                    <div class="error-message" id="register-email-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <div class="verification-code-group">
+                        <input type="text" id="register-verification-code" name="verification_code" class="form-input verification-code-input" placeholder="请输入验证码" required maxlength="6">
+                        <button type="button" class="verification-code-btn" id="get-verification-code-btn" onclick="sendVerificationCode()">获取验证码</button>
+                    </div>
+                    <div class="error-message" id="register-verification-code-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="register-password">密码</label>
+                    <input type="password" id="register-password" name="password" class="form-input" required>
+                    <div class="error-message" id="register-password-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="register-confirm-password">确认密码</label>
+                    <input type="password" id="register-confirm-password" name="confirm_password" class="form-input" required>
+                    <div class="error-message" id="register-confirm-password-error"></div>
+                </div>
+
+                <button type="submit" class="modal-button" id="register-button">
+                    注册
+                </button>
+
+                <div class="loading" id="register-loading">
+                    <i class="fa fa-spinner"></i>
+                </div>
+            </form>
+
+            <div class="modal-footer">
+                <p>已有账号？ <a href="#" class="modal-link" onclick="switchToLogin()">立即登录</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入Font Awesome图标库 -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <script>
+        // 检查用户登录状态
+        function checkUserStatus() {
+            fetch('/user/api/user-info/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateUserUI(data.user);
+                    } else {
+                        showGuestUI();
+                    }
+                })
+                .catch(error => {
+                    console.error('检查用户状态失败:', error);
+                    showGuestUI();
+                });
+        }
+
+        // 更新用户界面（已登录状态）
+        function updateUserUI(user) {
+            document.getElementById('guest-actions').style.display = 'none';
+            document.getElementById('user-info').style.display = 'flex';
+            
+            document.getElementById('user-name').textContent = user.name;
+            document.getElementById('user-avatar').textContent = user.name.charAt(0).toUpperCase();
+        }
+
+        // 显示访客界面（未登录状态）
+        function showGuestUI() {
+            document.getElementById('guest-actions').style.display = 'flex';
+            document.getElementById('user-info').style.display = 'none';
+        }
+
+        // 打开登录弹窗
+        function openLogin() {
+            document.getElementById('login-modal').classList.add('show');
+        }
+
+        // 打开注册弹窗
+        function openRegister() {
+            document.getElementById('register-modal').classList.add('show');
+        }
+
+        // 关闭弹窗
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+            clearForm(modalId);
+        }
+
+        // 切换到注册弹窗
+        function switchToRegister() {
+            document.getElementById('login-modal').classList.remove('show');
+            document.getElementById('register-modal').classList.add('show');
+        }
+
+        // 切换到登录弹窗
+        function switchToLogin() {
+            document.getElementById('register-modal').classList.remove('show');
+            document.getElementById('login-modal').classList.add('show');
+        }
+
+        // 清空表单
+        function clearForm(modalId) {
+            const modal = document.getElementById(modalId);
+            const form = modal.querySelector('form');
+            const inputs = form.querySelectorAll('input');
+            const errorMessages = modal.querySelectorAll('.error-message');
+            const successMessage = modal.querySelector('.success-message');
+            
+            inputs.forEach(input => {
+                input.value = '';
+                input.classList.remove('error');
+            });
+            
+            errorMessages.forEach(msg => {
+                msg.style.display = 'none';
+            });
+            
+            if (successMessage) {
+                successMessage.style.display = 'none';
+            }
+            
+            // 重置验证码按钮
+            if (modalId === 'register-modal') {
+                const btn = document.getElementById('get-verification-code-btn');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '获取验证码';
+                }
+                if (countdownTimer) {
+                    clearInterval(countdownTimer);
+                    countdownTimer = null;
+                }
+            }
+        }
+
+        // 用户登出
+        function logout() {
+            fetch('/user/api/logout/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showGuestUI();
+                    // 刷新页面以更新状态
+                    window.location.reload();
+                } else {
+                    console.error('退出登录失败:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('登出失败:', error);
+            });
+        }
+
+        // 设置登录表单事件
+        function setupLoginForm() {
+            const form = document.getElementById('login-form');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                clearErrors('login-modal');
+                
+                const email = document.getElementById('login-email').value.trim();
+                const password = document.getElementById('login-password').value.trim();
+                
+                if (!email) {
+                    showError('login-email', '请输入邮箱地址');
+                    return;
+                }
+                
+                if (!password) {
+                    showError('login-password', '请输入密码');
+                    return;
+                }
+                
+                // 显示加载状态
+                const button = document.getElementById('login-button');
+                const loading = document.getElementById('login-loading');
+                button.disabled = true;
+                loading.style.display = 'block';
+                
+                // 发送登录请求
+                fetch('/user/api/login/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccess('login-success-message', data.message);
+                        updateUserUI(data.user);
+                        setTimeout(() => {
+                            closeModal('login-modal');
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        showError('login-password', data.error);
+                    }
+                })
+                .catch(error => {
+                    showError('login-password', '网络错误，请稍后重试');
+                })
+                .finally(() => {
+                    button.disabled = false;
+                    loading.style.display = 'none';
+                });
+            });
+        }
+
+        // 发送验证码
+        let countdownTimer = null;
+        let countdownSeconds = 60;
+
+        function sendVerificationCode() {
+            const emailInput = document.getElementById('register-email');
+            const email = emailInput.value.trim();
+            const btn = document.getElementById('get-verification-code-btn');
+            
+            // 验证邮箱格式
+            if (!email) {
+                showError('register-email', '请先输入邮箱地址');
+                emailInput.focus();
+                return;
+            }
+            
+            // 验证邮箱格式
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('register-email', '请输入正确的邮箱格式');
+                emailInput.focus();
+                return;
+            }
+            
+            // 禁用按钮
+            btn.disabled = true;
+            btn.textContent = '发送中...';
+            
+            // 发送请求
+            fetch('/user/api/send-verification-code/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    purpose: 'register'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccess('register-success-message', data.message);
+                    // 开始倒计时
+                    startCountdown();
+                } else {
+                    showError('register-email', data.error);
+                    btn.disabled = false;
+                    btn.textContent = '获取验证码';
+                }
+            })
+            .catch(error => {
+                showError('register-email', '网络错误，请稍后重试');
+                btn.disabled = false;
+                btn.textContent = '获取验证码';
+            });
+        }
+
+        // 倒计时功能
+        function startCountdown() {
+            const btn = document.getElementById('get-verification-code-btn');
+            countdownSeconds = 60;
+            
+            if (countdownTimer) {
+                clearInterval(countdownTimer);
+            }
+            
+            countdownTimer = setInterval(function() {
+                countdownSeconds--;
+                btn.textContent = `${countdownSeconds}秒后重试`;
+                
+                if (countdownSeconds <= 0) {
+                    clearInterval(countdownTimer);
+                    btn.disabled = false;
+                    btn.textContent = '获取验证码';
+                }
+            }, 1000);
+        }
+
+        // 设置注册表单事件
+        function setupRegisterForm() {
+            const form = document.getElementById('register-form');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                clearErrors('register-modal');
+                
+                const name = document.getElementById('register-name').value.trim();
+                const email = document.getElementById('register-email').value.trim();
+                const verificationCode = document.getElementById('register-verification-code').value.trim();
+                const password = document.getElementById('register-password').value.trim();
+                const confirmPassword = document.getElementById('register-confirm-password').value.trim();
+                
+                if (!name) {
+                    showError('register-name', '请输入用户名');
+                    return;
+                }
+                
+                if (name.length < 2 || name.length > 20) {
+                    showError('register-name', '用户名长度必须在2-20个字符之间');
+                    return;
+                }
+                
+                if (!email) {
+                    showError('register-email', '请输入邮箱地址');
+                    return;
+                }
+                
+                if (!verificationCode) {
+                    showError('register-verification-code', '请输入验证码');
+                    return;
+                }
+                
+                if (verificationCode.length !== 6) {
+                    showError('register-verification-code', '验证码必须是6位数字');
+                    return;
+                }
+                
+                if (!password) {
+                    showError('register-password', '请输入密码');
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    showError('register-password', '密码长度不能少于6位');
+                    return;
+                }
+                
+                if (!confirmPassword) {
+                    showError('register-confirm-password', '请确认密码');
+                    return;
+                }
+                
+                if (password !== confirmPassword) {
+                    showError('register-confirm-password', '两次输入的密码不一致');
+                    return;
+                }
+                
+                // 显示加载状态
+                const button = document.getElementById('register-button');
+                const loading = document.getElementById('register-loading');
+                button.disabled = true;
+                loading.style.display = 'block';
+                
+                // 发送注册请求
+                fetch('/user/api/register/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        password: password,
+                        confirm_password: confirmPassword,
+                        verification_code: verificationCode
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccess('register-success-message', data.message);
+                        updateUserUI(data.user);
+                        setTimeout(() => {
+                            closeModal('register-modal');
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        // 重置按钮状态，保持弹窗打开
+                        button.disabled = false;
+                        loading.style.display = 'none';
+                        
+                        // 根据错误类型显示在对应字段
+                        if (data.error.includes('用户名')) {
+                            showError('register-name', data.error);
+                        } else if (data.error.includes('邮箱')) {
+                            showError('register-email', data.error);
+                        } else if (data.error.includes('验证码')) {
+                            showError('register-verification-code', data.error);
+                        } else if (data.error.includes('密码')) {
+                            showError('register-password', data.error);
+                        } else {
+                            showError('register-name', data.error);
+                        }
+                    }
+                })
+                .catch(error => {
+                    // 重置按钮状态，保持弹窗打开
+                    button.disabled = false;
+                    loading.style.display = 'none';
+                    showError('register-name', '网络错误，请稍后重试');
+                });
+            });
+        }
+
+        // 显示错误信息
+        function showError(fieldId, message) {
+            const errorElement = document.getElementById(fieldId + '-error');
+            const inputElement = document.getElementById(fieldId);
+            
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+            }
+            
+            if (inputElement) {
+                inputElement.classList.add('error');
+            }
+        }
+
+        // 清空错误信息
+        function clearErrors(modalId) {
+            const modal = document.getElementById(modalId);
+            const errorMessages = modal.querySelectorAll('.error-message');
+            const inputs = modal.querySelectorAll('.form-input');
+            
+            errorMessages.forEach(msg => {
+                msg.style.display = 'none';
+            });
+            
+            inputs.forEach(input => {
+                input.classList.remove('error');
+            });
+        }
+
+        // 显示成功信息
+        function showSuccess(messageId, message) {
+            const successElement = document.getElementById(messageId);
+            if (successElement) {
+                successElement.textContent = message;
+                successElement.style.display = 'block';
+            }
+        }
+
+        // 设置弹窗背景点击关闭
+        function setupModalCloseOnBackground() {
+            const modals = ['login-modal', 'register-modal'];
+            
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeModal(modalId);
+                    }
+                });
+            });
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查用户登录状态
+            checkUserStatus();
+
+            // 设置登录表单事件
+            setupLoginForm();
+            
+            // 设置注册表单事件
+            setupRegisterForm();
+            
+            // 设置弹窗背景点击关闭
+            setupModalCloseOnBackground();
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}关于我们 - 暮雪{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== 关于页面 - 暮雪主题 ===== */
+    .about-page {
+        min-height: calc(100vh - 60px);
+        background:
+            radial-gradient(ellipse 60% 40% at 50% 20%, rgba(91, 140, 189, 0.04) 0%, transparent 60%),
+            linear-gradient(180deg, #f8fafc 0%, #ffffff 40%, #f4f7fb 100%);
+    }
+
+    .about-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: clamp(3rem, 6vw, 5rem) 20px;
+        text-align: center;
+    }
+
+    /* 页头 */
+    .about-header {
+        margin-bottom: 3rem;
+    }
+    .about-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        border-radius: 20px;
+        background: linear-gradient(135deg, rgba(91, 140, 189, 0.1), rgba(74, 126, 174, 0.06));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #5b8cbd;
+        box-shadow: 0 4px 16px rgba(91, 140, 189, 0.08);
+    }
+    .about-title {
+        font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+        font-weight: 800;
+        background: linear-gradient(135deg, #3b7cb8 0%, #5b8cbd 40%, #7aacd6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+    }
+    .about-desc {
+        font-size: 1rem;
+        color: #64748b;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.8;
+    }
+
+    /* 联系方式卡片 */
+    .contacts {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        flex-wrap: wrap;
+        margin-top: 2rem;
+    }
+    .contact-card {
+        background: #ffffff;
+        border: 1px solid #e4eaf1;
+        border-radius: 16px;
+        padding: 1.8rem 1.5rem;
+        width: 150px;
+        text-decoration: none;
+        box-shadow: 0 2px 12px rgba(92, 140, 189, 0.06);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .contact-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #5b8cbd, #4a7eae);
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .contact-card:hover {
+        transform: translateY(-5px);
+        border-color: #5b8cbd;
+        box-shadow: 0 8px 30px rgba(92, 140, 189, 0.12);
+    }
+    .contact-card:hover::before { opacity: 1; }
+    .contact-card img {
+        width: 56px;
+        height: 56px;
+        margin-bottom: 0.8rem;
+        transition: transform 0.3s;
+    }
+    .contact-card:hover img {
+        transform: scale(1.08);
+    }
+    .contact-card p {
+        margin: 0;
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.95rem;
+    }
+
+    /* 网站介绍卡片 */
+    .intro-card {
+        background: #ffffff;
+        border: 1px solid #e4eaf1;
+        border-radius: 16px;
+        padding: 2rem 2.5rem;
+        margin: 3rem auto 0;
+        max-width: 700px;
+        text-align: left;
+        box-shadow: 0 2px 12px rgba(92, 140, 189, 0.06);
+    }
+    .intro-card h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .intro-card h3::before {
+        content: '❄';
+        font-size: 1.2rem;
+    }
+    .intro-card p {
+        font-size: 0.9rem;
+        color: #64748b;
+        line-height: 1.8;
+        margin-bottom: 0.5rem;
+    }
+    .intro-card .tech-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    .intro-card .tech-tag {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        background: rgba(91, 140, 189, 0.08);
+        color: #5b8cbd;
+    }
+
+    @media (max-width: 600px) {
+        .contacts { gap: 15px; }
+        .contact-card { width: 130px; padding: 1.2rem 1rem; }
+        .contact-card img { width: 44px; height: 44px; }
+        .intro-card { padding: 1.5rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="about-page">
+    <div class="about-container">
+
+        <!-- 页头 -->
+        <div class="about-header">
+            <div class="about-icon">❄</div>
+            <h1 class="about-title">关于暮雪</h1>
+            <p class="about-desc">
+                欢迎来到暮雪（MX）！我们致力于提供高质量的嵌入式系统学习内容。
+                如果你有任何问题或想要交流，请通过以下方式联系我们。
+            </p>
+        </div>
+
+        <!-- 联系方式 -->
+        <div class="contacts">
+            <a class="contact-card" href="#" target="_blank" rel="noopener">
+                <img src="{% static 'img/weixin.png' %}" alt="微信">
+                <p>微信</p>
+            </a>
+            <a class="contact-card" href="https://github.com/" target="_blank" rel="noopener">
+                <img src="{% static 'img/github.png' %}" alt="GitHub">
+                <p>GitHub</p>
+            </a>
+            <a class="contact-card" href="mailto:muxuemail@163.com">
+                <img src="{% static 'img/email.png' %}" alt="邮箱">
+                <p>邮箱</p>
+            </a>
+        </div>
+
+        <!-- 平台介绍 -->
+        <div class="intro-card">
+            <h3>关于暮雪平台</h3>
+            <p>
+                暮雪是一个专注于嵌入式系统开发的学习平台。我们提供从入门到进阶的完整教程，
+                涵盖 STM32 微控制器、FreeRTOS 实时操作系统、Linux 驱动开发等核心技术栈。
+            </p>
+            <p>
+                无论你是初学者还是有经验的开发者，这里都有适合你的学习资源。
+                暮雪寓意"雪落无声，代码有痕"——每一行代码都是成长的印记。
+            </p>
+            <div class="tech-tags">
+                <span class="tech-tag">STM32</span>
+                <span class="tech-tag">FreeRTOS</span>
+                <span class="tech-tag">Linux 驱动</span>
+                <span class="tech-tag">嵌入式</span>
+                <span class="tech-tag">ARM</span>
+                <span class="tech-tag">IoT</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}开源项目 - 暮雪{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== 项目列表页 - 暮雪主题 ===== */
+    .project-page {
+        min-height: calc(100vh - 60px);
+        background:
+            radial-gradient(ellipse 50% 30% at 50% 10%, rgba(91, 140, 189, 0.04) 0%, transparent 60%),
+            linear-gradient(180deg, #f8fafc 0%, #ffffff 50%, #f4f7fb 100%);
+    }
+
+    .project-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: clamp(2rem, 5vw, 4rem) 1.5rem;
+    }
+
+    /* 页头 */
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    .page-icon {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 1.2rem;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(91, 140, 189, 0.1), rgba(74, 126, 174, 0.06));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: #5b8cbd;
+        box-shadow: 0 4px 16px rgba(91, 140, 189, 0.08);
+    }
+    .page-title {
+        font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+        font-weight: 800;
+        background: linear-gradient(135deg, #3b7cb8 0%, #5b8cbd 40%, #7aacd6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.6rem;
+    }
+    .page-desc {
+        font-size: 1rem;
+        color: #64748b;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    /* 项目卡片网格 */
+    .project-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1.5rem;
+    }
+    .project-card {
+        background: #ffffff;
+        border: 1px solid #e4eaf1;
+        border-radius: 16px;
+        padding: 1.8rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 12px rgba(92, 140, 189, 0.05);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .project-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #5b8cbd, #4a7eae);
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .project-card:hover {
+        transform: translateY(-4px);
+        border-color: #5b8cbd;
+        box-shadow: 0 8px 30px rgba(92, 140, 189, 0.12);
+    }
+    .project-card:hover::before { opacity: 1; }
+
+    .project-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(91, 140, 189, 0.1), rgba(74, 126, 174, 0.06));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        color: #5b8cbd;
+        margin-bottom: 1rem;
+    }
+    .project-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.6rem;
+        line-height: 1.4;
+    }
+    .project-desc {
+        font-size: 0.85rem;
+        color: #64748b;
+        line-height: 1.7;
+        margin-bottom: 1.2rem;
+        flex: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .project-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 1rem;
+    }
+    .project-tag {
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        background: rgba(91, 140, 189, 0.08);
+        color: #5b8cbd;
+    }
+    .project-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.78rem;
+        color: #94a3b8;
+        padding-top: 0.8rem;
+        border-top: 1px solid #f4f7fb;
+    }
+    .project-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    /* 空状态 */
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: #94a3b8;
+    }
+    .empty-state .empty-icon {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+    .empty-state h3 {
+        color: #64748b;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+        .project-grid { grid-template-columns: 1fr; }
+        .project-container { padding: 2rem 1rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="project-page">
+    <div class="project-container">
+
+        <!-- 页头 -->
+        <div class="page-header">
+            <div class="page-icon">🛠</div>
+            <h1 class="page-title">开源项目</h1>
+            <p class="page-desc">嵌入式开发实战项目，从实践中学习成长</p>
+        </div>
+
+        <!-- 项目列表 -->
+        {% if projects %}
+        <div class="project-grid">
+            {% for project in projects %}
+            <div class="project-card">
+                <div class="project-icon">📦</div>
+                <h3 class="project-title">{{ project.title }}</h3>
+                <div class="project-desc">{{ project.content|truncatechars:150 }}</div>
+                {% if project.tags.all %}
+                <div class="project-tags">
+                    {% for tag in project.tags.all %}
+                    <span class="project-tag">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="project-meta">
+                    <span><i class="fa fa-calendar"></i> {{ project.created_at|date:"Y-m-d" }}</span>
+                    <span><i class="fa fa-eye"></i> {{ project.view_count }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <span class="empty-icon">📭</span>
+            <h3>暂无项目</h3>
+            <p>项目正在整理中，敬请期待</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,399 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}学习教程 - 暮雪{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== 学习页面 - 暮雪主题 ===== */
+    .blog-page {
+        display: flex;
+        min-height: calc(100vh - 60px);
+        background:
+            radial-gradient(ellipse 40% 30% at 20% 50%, rgba(91, 140, 189, 0.03) 0%, transparent 50%),
+            linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+    }
+
+    /* ---- 左侧边栏 ---- */
+    .sidebar {
+        width: 260px;
+        flex-shrink: 0;
+        background: #ffffff;
+        border-right: 1px solid #e4eaf1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+    .sidebar-header {
+        padding: 1.5rem 1.2rem 0.8rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .search-container {
+        padding: 0 1.2rem 1rem;
+    }
+    .search-box {
+        position: relative;
+    }
+    .search-box input {
+        width: 100%;
+        padding: 10px 36px 10px 14px;
+        border: 1px solid #e4eaf1;
+        border-radius: 24px;
+        background: #f4f7fb;
+        color: #2c3e50;
+        font-size: 13px;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+    .search-box input:focus {
+        border-color: #5b8cbd;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(91, 140, 189, 0.08);
+    }
+    .search-box input::placeholder { color: #94a3b8; }
+    .search-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 14px;
+        pointer-events: none;
+    }
+    .sidebar-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        flex: 1;
+        overflow-y: auto;
+    }
+    .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 13px 1.2rem;
+        color: #2c3e50;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border-left: 3px solid transparent;
+        font-size: 0.9rem;
+    }
+    .menu-item:hover {
+        background: #f4f7fb;
+        color: #5b8cbd;
+    }
+    .menu-item.active {
+        background: linear-gradient(90deg, #eaf2f9 0%, transparent 100%);
+        color: #5b8cbd;
+        border-left-color: #5b8cbd;
+        font-weight: 600;
+    }
+    .menu-icon {
+        width: 20px;
+        text-align: center;
+        font-size: 0.9rem;
+        opacity: 0.7;
+    }
+    .menu-item.active .menu-icon { opacity: 1; }
+
+    /* ---- 右侧内容区 ---- */
+    .content-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 2rem;
+    }
+    .content-header {
+        margin-bottom: 1.5rem;
+    }
+    .content-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .content-title .count-badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.15rem 0.6rem;
+        border-radius: 20px;
+        background: rgba(91, 140, 189, 0.08);
+        color: #5b8cbd;
+    }
+
+    /* ---- 文章卡片 ---- */
+    .articles-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.2rem;
+    }
+    .article-card {
+        background: #ffffff;
+        border: 1px solid #e4eaf1;
+        border-radius: 14px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(92, 140, 189, 0.04);
+        display: flex;
+        flex-direction: column;
+    }
+    .article-card:hover {
+        transform: translateY(-2px);
+        border-color: #5b8cbd;
+        box-shadow: 0 8px 30px rgba(92, 140, 189, 0.1);
+    }
+    .article-card.featured {
+        border-left: 3px solid #5b8cbd;
+    }
+    .article-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.6rem;
+        line-height: 1.4;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .featured-badge {
+        background: rgba(217, 119, 6, 0.1);
+        color: #d97706;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .article-summary {
+        color: #64748b;
+        font-size: 0.85rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        flex: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .article-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.78rem;
+        color: #94a3b8;
+        padding-top: 0.8rem;
+        border-top: 1px solid #f4f7fb;
+    }
+    .article-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    /* ---- 状态 ---- */
+    .loading {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #94a3b8;
+    }
+    .loading i { font-size: 1.5rem; margin-bottom: 0.5rem; display: block; }
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: #94a3b8;
+    }
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #cbd5e1;
+        display: block;
+    }
+    .empty-state h3 {
+        color: #64748b;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+        .blog-page { flex-direction: column; }
+        .sidebar {
+            width: 100%;
+            border-right: none;
+            border-bottom: 1px solid #e4eaf1;
+            max-height: 200px;
+        }
+        .content-area { padding: 1.2rem; }
+        .articles-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="blog-page">
+    <!-- 左侧边栏 -->
+    <aside class="sidebar">
+        <div class="sidebar-header">📂 学习分类</div>
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="搜索文章标题..." />
+                <i class="fa fa-search search-icon"></i>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            {% for category in categories %}
+            <li>
+                <a href="#" class="menu-item" data-category-id="{{ category.id }}">
+                    <i class="fa {{ category.icon }} menu-icon"></i>
+                    <span>{{ category.name }}</span>
+                </a>
+            </li>
+            {% empty %}
+            <li>
+                <div class="menu-item">
+                    <i class="fa fa-info-circle menu-icon"></i>
+                    <span>暂无分类</span>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </aside>
+
+    <!-- 右侧内容区 -->
+    <div class="content-area">
+        <div id="articles-container">
+            <div class="empty-state">
+                <i class="fa fa-folder-open"></i>
+                <h3>选择分类</h3>
+                <p>请选择左侧分类查看文章</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentCategoryId = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuItems = document.querySelectorAll('.menu-item[data-category-id]');
+        const searchInput = document.getElementById('search-input');
+
+        menuItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                menuItems.forEach(menu => menu.classList.remove('active'));
+                this.classList.add('active');
+                const categoryId = this.getAttribute('data-category-id');
+                loadArticles(categoryId);
+            });
+        });
+
+        searchInput.addEventListener('input', function() {
+            const keyword = this.value.trim();
+            if (keyword.length >= 2) {
+                searchArticles(keyword);
+            } else if (keyword.length === 0) {
+                document.getElementById('articles-container').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa fa-folder-open"></i>
+                        <h3>选择分类</h3>
+                        <p>请选择左侧分类查看文章</p>
+                    </div>`;
+                menuItems.forEach(menu => menu.classList.remove('active'));
+            }
+        });
+    });
+
+    function loadArticles(categoryId) {
+        if (currentCategoryId === categoryId) return;
+        currentCategoryId = categoryId;
+        document.getElementById('articles-container').innerHTML = `
+            <div class="loading">
+                <i class="fa fa-spinner fa-spin"></i>
+                <span>加载中...</span>
+            </div>`;
+
+        fetch(`/blog/api/articles/category/${categoryId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayArticles(data.articles, data.category_name);
+                } else {
+                    showError('加载文章失败: ' + data.error);
+                }
+            })
+            .catch(error => { showError('网络错误: ' + error.message); });
+    }
+
+    function displayArticles(articles, categoryName) {
+        const container = document.getElementById('articles-container');
+        if (articles.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa fa-file-text-o"></i>
+                    <h3>暂无文章</h3>
+                    <p>该分类下暂时没有文章</p>
+                </div>`;
+            return;
+        }
+        const html = `
+            <div class="content-header">
+                <h2 class="content-title">${categoryName} <span class="count-badge">${articles.length} 篇</span></h2>
+            </div>
+            <div class="articles-grid">
+                ${articles.map(article => `
+                    <div class="article-card ${article.is_featured ? 'featured' : ''}" onclick="openArticle(${article.id})">
+                        <div class="article-title">
+                            ${article.title}
+                            ${article.is_featured ? '<span class="featured-badge">推荐</span>' : ''}
+                        </div>
+                        <div class="article-meta">
+                            <span><i class="fa fa-calendar"></i> ${article.published_at}</span>
+                            <span><i class="fa fa-eye"></i> ${article.view_count}</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>`;
+        container.innerHTML = html;
+    }
+
+    function searchArticles(keyword) {
+        document.getElementById('articles-container').innerHTML = `
+            <div class="loading">
+                <i class="fa fa-spinner fa-spin"></i>
+                <span>搜索中...</span>
+            </div>`;
+        fetch(`/blog/api/search/?q=${encodeURIComponent(keyword)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayArticles(data.articles, `搜索: "${keyword}"`);
+                } else {
+                    showError('搜索失败: ' + data.error);
+                }
+            })
+            .catch(error => { showError('搜索出错: ' + error.message); });
+    }
+
+    function openArticle(articleId) {
+        window.open(`/blog/article/${articleId}/`, '_blank');
+    }
+
+    function showError(message) {
+        document.getElementById('articles-container').innerHTML = `
+            <div class="empty-state">
+                <i class="fa fa-exclamation-triangle"></i>
+                <h3>出错了</h3>
+                <p>${message}</p>
+            </div>`;
+    }
+</script>
+{% endblock %}

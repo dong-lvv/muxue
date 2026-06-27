@@ -1,0 +1,7 @@
+django
+mysqlclient
+markdown
+gunicorn
+djangorestframework
+django-cors-headers
+Pillow

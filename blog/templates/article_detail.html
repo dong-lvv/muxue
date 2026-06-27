@@ -1,0 +1,453 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ article.title }} - 暮雪{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== 文章详情页 - 暮雪主题 ===== */
+    .article-page {
+        min-height: calc(100vh - 60px);
+        background:
+            radial-gradient(ellipse 50% 30% at 50% 10%, rgba(91, 140, 189, 0.04) 0%, transparent 60%),
+            linear-gradient(180deg, #f8fafc 0%, #ffffff 50%, #f4f7fb 100%);
+        padding: 2rem 1rem;
+    }
+
+    .article-container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: #ffffff;
+        border: 1px solid #e4eaf1;
+        border-radius: 16px;
+        padding: clamp(2rem, 5vw, 3.5rem) clamp(1.5rem, 5vw, 4rem);
+        box-shadow: 0 2px 12px rgba(92, 140, 189, 0.06);
+    }
+
+    /* 文章头部 */
+    .article-header {
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #e4eaf1;
+    }
+    .article-title {
+        font-size: clamp(1.5rem, 3vw, 2rem);
+        font-weight: 800;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        line-height: 1.4;
+    }
+    .article-meta {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.2rem;
+        font-size: 0.85rem;
+        color: #94a3b8;
+    }
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .meta-item i { opacity: 0.7; }
+    .meta-category {
+        font-weight: 600;
+        padding: 0.2rem 0.7rem;
+        border-radius: 20px;
+        background: rgba(91, 140, 189, 0.08);
+        color: #5b8cbd;
+    }
+
+    /* 文章正文 */
+    .article-content {
+        font-size: 1rem;
+        line-height: 1.9;
+        color: #2c3e50;
+    }
+    .article-content h1,
+    .article-content h2,
+    .article-content h3,
+    .article-content h4 {
+        margin: 2rem 0 1rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+    .article-content h1 { font-size: 1.6rem; border-bottom: 2px solid #e4eaf1; padding-bottom: 0.5rem; }
+    .article-content h2 { font-size: 1.35rem; border-bottom: 1px solid #f4f7fb; padding-bottom: 0.4rem; }
+    .article-content h3 { font-size: 1.15rem; }
+    .article-content h4 { font-size: 1.05rem; }
+    .article-content p { margin-bottom: 1rem; }
+    .article-content ul,
+    .article-content ol { margin: 1rem 0; padding-left: 1.8rem; }
+    .article-content li { margin-bottom: 0.4rem; }
+
+    /* 行内代码 */
+    .article-content code {
+        background: #f4f7fb;
+        color: #3b7cb8;
+        padding: 2px 7px;
+        border-radius: 5px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.88rem;
+        border: 1px solid #e4eaf1;
+    }
+
+    /* 代码块 */
+    .code-block-wrapper {
+        position: relative;
+        margin: 1.5rem 0;
+    }
+    .article-content pre {
+        background: #f8fafc;
+        border: 1px solid #e4eaf1;
+        border-radius: 10px;
+        padding: 1.2rem;
+        overflow-x: auto;
+        margin: 0;
+    }
+    .article-content pre code {
+        background: none;
+        padding: 0;
+        color: #334155;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.85rem;
+        line-height: 1.7;
+        border: none;
+    }
+    .copy-button {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: #ffffff;
+        color: #64748b;
+        border: 1px solid #e4eaf1;
+        padding: 5px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.75rem;
+        opacity: 0;
+        transition: all 0.2s ease;
+        z-index: 10;
+    }
+    .code-block-wrapper:hover .copy-button { opacity: 1; }
+    .copy-button:hover { background: #f4f7fb; border-color: #5b8cbd; color: #5b8cbd; }
+    .copy-button.copied { background: #d4edda; border-color: #28a745; color: #155724; }
+
+    /* 引用块 */
+    .article-content blockquote {
+        border-left: 3px solid #5b8cbd;
+        padding: 0.8rem 1.2rem;
+        margin: 1.5rem 0;
+        background: #f4f7fb;
+        border-radius: 0 8px 8px 0;
+        color: #64748b;
+    }
+    .article-content blockquote p { margin-bottom: 0; }
+
+    /* 表格 */
+    .article-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.5rem 0;
+        font-size: 0.9rem;
+    }
+    .article-content table th,
+    .article-content table td {
+        border: 1px solid #e4eaf1;
+        padding: 10px 14px;
+        text-align: left;
+    }
+    .article-content table th {
+        background: #f4f7fb;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    .article-content table tr:hover td { background: #fafbfc; }
+
+    .article-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+    }
+    .article-content a {
+        color: #5b8cbd;
+        text-decoration: none;
+        border-bottom: 1px solid transparent;
+        transition: border-color 0.2s;
+    }
+    .article-content a:hover { border-bottom-color: #5b8cbd; }
+    .article-content hr {
+        border: none;
+        height: 1px;
+        background: #e4eaf1;
+        margin: 2rem 0;
+    }
+
+    /* 大纲按钮 */
+    .toc-button {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: #ffffff;
+        color: #2c3e50;
+        border: 1px solid #e4eaf1;
+        padding: 10px 18px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 2px 8px rgba(92, 140, 189, 0.08);
+        transition: all 0.3s ease;
+        z-index: 999;
+    }
+    .toc-button:hover {
+        border-color: #5b8cbd;
+        color: #5b8cbd;
+        box-shadow: 0 4px 16px rgba(92, 140, 189, 0.15);
+    }
+
+    /* 大纲侧边栏 */
+    .toc-sidebar {
+        position: fixed;
+        top: 0;
+        right: -350px;
+        width: 350px;
+        height: 100vh;
+        background: #ffffff;
+        border-left: 1px solid #e4eaf1;
+        box-shadow: -4px 0 20px rgba(0,0,0,0.08);
+        z-index: 2000;
+        transition: right 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+    .toc-sidebar.show { right: 0; }
+    .toc-header {
+        padding: 1.2rem 1.5rem;
+        border-bottom: 1px solid #e4eaf1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .toc-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+    .toc-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+    .toc-close:hover { background: #f4f7fb; color: #2c3e50; }
+    .toc-content {
+        padding: 1rem 1.2rem;
+        overflow-y: auto;
+        flex: 1;
+    }
+    .toc-item {
+        padding: 7px 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        color: #64748b;
+        font-size: 0.85rem;
+        border-left: 2px solid transparent;
+    }
+    .toc-item:hover {
+        background: #f4f7fb;
+        color: #5b8cbd;
+    }
+    .toc-item.active {
+        background: #eaf2f9;
+        color: #5b8cbd;
+        border-left-color: #5b8cbd;
+        font-weight: 600;
+    }
+    .toc-item.h2 { padding-left: 4px; font-weight: 600; color: #2c3e50; }
+    .toc-item.h3 { padding-left: 20px; font-size: 0.82rem; }
+    .toc-item.h4 { padding-left: 36px; font-size: 0.8rem; }
+    .toc-item.h5 { padding-left: 52px; font-size: 0.78rem; }
+    .toc-item.h6 { padding-left: 68px; font-size: 0.75rem; }
+
+    @media (max-width: 768px) {
+        .article-page { padding: 1rem 0.5rem; }
+        .article-container {
+            padding: 1.5rem 1.2rem;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+        }
+        .toc-button { top: 70px; right: 10px; padding: 8px 14px; font-size: 0.8rem; }
+        .toc-sidebar { width: 280px; right: -280px; }
+        .article-meta { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    }
+</style>
+<!-- 代码高亮 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="article-page">
+    <!-- 大纲按钮 -->
+    <button class="toc-button" id="toc-button">
+        <i class="fa fa-list"></i> 大纲
+    </button>
+
+    <!-- 大纲侧边栏 -->
+    <div class="toc-sidebar" id="toc-sidebar">
+        <div class="toc-header">
+            <div class="toc-title">📑 文章大纲</div>
+            <button class="toc-close" id="toc-close">&times;</button>
+        </div>
+        <div class="toc-content" id="toc-content"></div>
+    </div>
+
+    <div class="article-container">
+        <div class="article-header">
+            <h1 class="article-title">{{ article.title }}</h1>
+            <div class="article-meta">
+                <span class="meta-item">
+                    <i class="fa fa-calendar"></i>
+                    {{ article.published_at|date:"Y年m月d日" }}
+                </span>
+                <span class="meta-item">
+                    <i class="fa fa-eye"></i>
+                    {{ article.view_count }} 次阅读
+                </span>
+                <span class="meta-category">{{ article.category.name }}</span>
+            </div>
+        </div>
+
+        <div class="article-content">
+            {{ article.content_html }}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- 代码高亮 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        hljs.highlightAll();
+        addCopyButtons();
+        initTOC();
+    });
+
+    function addCopyButtons() {
+        document.querySelectorAll('pre code').forEach(function(codeBlock) {
+            const pre = codeBlock.parentElement;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'code-block-wrapper';
+            pre.parentNode.insertBefore(wrapper, pre);
+            wrapper.appendChild(pre);
+
+            const btn = document.createElement('button');
+            btn.className = 'copy-button';
+            btn.textContent = '复制';
+            btn.onclick = function() {
+                const text = codeBlock.textContent;
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text).then(function() { showCopyDone(btn); })
+                        .catch(function() { fallbackCopy(text, btn); });
+                } else {
+                    fallbackCopy(text, btn);
+                }
+            };
+            wrapper.appendChild(btn);
+        });
+    }
+
+    function fallbackCopy(text, btn) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
+        document.body.appendChild(ta);
+        ta.focus(); ta.select();
+        try { document.execCommand('copy'); showCopyDone(btn); } catch(e) { btn.textContent = '失败'; }
+        document.body.removeChild(ta);
+    }
+
+    function showCopyDone(btn) {
+        btn.textContent = '已复制';
+        btn.classList.add('copied');
+        setTimeout(function() { btn.textContent = '复制'; btn.classList.remove('copied'); }, 2000);
+    }
+
+    function initTOC() {
+        const tocButton = document.getElementById('toc-button');
+        const tocSidebar = document.getElementById('toc-sidebar');
+        const tocClose = document.getElementById('toc-close');
+        tocButton.addEventListener('click', function() { tocSidebar.classList.add('show'); generateTOC(); });
+        tocClose.addEventListener('click', function() { tocSidebar.classList.remove('show'); });
+        tocSidebar.addEventListener('click', function(e) { if (e.target === tocSidebar) tocSidebar.classList.remove('show'); });
+    }
+
+    function generateTOC() {
+        const headings = document.querySelectorAll('.article-content h2, .article-content h3, .article-content h4, .article-content h5, .article-content h6');
+        const tocContent = document.getElementById('toc-content');
+        if (headings.length === 0) {
+            tocContent.innerHTML = '<div style="padding:20px;color:#94a3b8;text-align:center;">暂无标题</div>';
+            return;
+        }
+        let html = '';
+        headings.forEach(function(h, i) {
+            const level = parseInt(h.tagName.charAt(1));
+            h.id = 'heading-' + i;
+            html += `<div class="toc-item h${level}" data-target="heading-${i}">${h.textContent.trim()}</div>`;
+        });
+        tocContent.innerHTML = html;
+        setupTOCEvents();
+    }
+
+    function setupTOCEvents() {
+        const tocContent = document.getElementById('toc-content');
+        tocContent.addEventListener('click', function(e) {
+            const item = e.target.closest('.toc-item');
+            if (!item) return;
+            const target = document.getElementById(item.getAttribute('data-target'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                document.querySelectorAll('.toc-item').forEach(t => t.classList.remove('active'));
+                item.classList.add('active');
+            }
+        });
+
+        const headings = document.querySelectorAll('.article-content h2, .article-content h3, .article-content h4, .article-content h5, .article-content h6');
+        if (headings.length === 0) return;
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    const activeItem = document.querySelector(`[data-target="${entry.target.id}"]`);
+                    if (activeItem) {
+                        document.querySelectorAll('.toc-item').forEach(t => t.classList.remove('active'));
+                        activeItem.classList.add('active');
+                        const tocRect = tocContent.getBoundingClientRect();
+                        const itemRect = activeItem.getBoundingClientRect();
+                        const relTop = itemRect.top - tocRect.top;
+                        if (relTop < 0) tocContent.scrollTop += relTop - 20;
+                        else if (itemRect.bottom > tocRect.bottom) tocContent.scrollTop += itemRect.bottom - tocRect.bottom + 20;
+                    }
+                }
+            });
+        }, { rootMargin: '-20% 0px -70% 0px' });
+        headings.forEach(function(h) { observer.observe(h); });
+    }
+</script>
+{% endblock %}
