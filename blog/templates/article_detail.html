@@ -1,39 +1,112 @@
-{% extends 'base.html' %}
 {% load static %}
-
-{% block title %}{{ article.title }} - 暮雪{% endblock %}
-
-{% block extra_css %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ article.title }} - 暮雪</title>
+    <link rel="icon" href="{% static 'img/logo.png' %}">
 <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ===== 主题变量：浅色（默认） ===== */
+    :root {
+        --bg-page-1: #f8fafc;
+        --bg-page-2: #ffffff;
+        --bg-page-3: #f4f7fb;
+        --bg-glow: rgba(91, 140, 189, 0.04);
+        --bg-container: #ffffff;
+        --bg-soft: #f4f7fb;
+        --bg-softer: #fafbfc;
+        --bg-control: #ffffff;
+        --border: #e4eaf1;
+        --border-soft: #f4f7fb;
+        --text: #2c3e50;
+        --text-strong: #1e293b;
+        --text-muted: #64748b;
+        --text-faint: #94a3b8;
+        --accent: #5b8cbd;
+        --accent-soft: #eaf2f9;
+        --accent-chip-bg: rgba(91, 140, 189, 0.08);
+        --code-inline: #3b7cb8;
+        --code-block-text: #334155;
+        --shadow-sm: 0 2px 8px rgba(92, 140, 189, 0.08);
+        --shadow-md: 0 4px 16px rgba(92, 140, 189, 0.15);
+        --shadow-side: -4px 0 20px rgba(0, 0, 0, 0.08);
+        --copied-bg: #d4edda;
+        --copied-border: #28a745;
+        --copied-text: #155724;
+    }
+
+    /* ===== 主题变量：深色 — Monokai Dimmed 灰黑配色 ===== */
+    :root[data-theme="dark"] {
+        --bg-page-1: #1e1e1e;
+        --bg-page-2: #1e1e1e;
+        --bg-page-3: #1e1e1e;
+        --bg-glow: rgba(192, 112, 32, 0.05);
+        --bg-container: #272727;
+        --bg-soft: #2d2d2d;
+        --bg-softer: #333333;
+        --bg-control: #2d2d2d;
+        --border: #3a3a3a;
+        --border-soft: #2d2d2d;
+        --text: #c5c8c6;
+        --text-strong: #e6e6e6;
+        --text-muted: #9a9b99;
+        --text-faint: #707070;
+        --accent: #c07020;
+        --accent-soft: #3a2a18;
+        --accent-chip-bg: rgba(192, 112, 32, 0.18);
+        --code-inline: #d6a456;
+        --code-block-text: #c5c8c6;
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.55);
+        --shadow-md: 0 4px 18px rgba(0, 0, 0, 0.65);
+        --shadow-side: -4px 0 24px rgba(0, 0, 0, 0.6);
+        --copied-bg: #2c3a23;
+        --copied-border: #9aa83a;
+        --copied-text: #c8d68a;
+    }
+
+    html, body {
+        background-color: var(--bg-page-2);
+    }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        color: var(--text);
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
     /* ===== 文章详情页 - 暮雪主题 ===== */
     .article-page {
-        min-height: calc(100vh - 60px);
+        min-height: 100vh;
         background:
-            radial-gradient(ellipse 50% 30% at 50% 10%, rgba(91, 140, 189, 0.04) 0%, transparent 60%),
-            linear-gradient(180deg, #f8fafc 0%, #ffffff 50%, #f4f7fb 100%);
+            radial-gradient(ellipse 50% 30% at 50% 10%, var(--bg-glow) 0%, transparent 60%),
+            linear-gradient(180deg, var(--bg-page-1) 0%, var(--bg-page-2) 50%, var(--bg-page-3) 100%);
         padding: 2rem 1rem;
+        transition: background 0.3s ease;
     }
 
     .article-container {
         max-width: 900px;
         margin: 0 auto;
-        background: #ffffff;
-        border: 1px solid #e4eaf1;
+        background: var(--bg-container);
+        border: 1px solid var(--border);
         border-radius: 16px;
         padding: clamp(2rem, 5vw, 3.5rem) clamp(1.5rem, 5vw, 4rem);
-        box-shadow: 0 2px 12px rgba(92, 140, 189, 0.06);
+        box-shadow: var(--shadow-sm);
+        transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     }
 
     /* 文章头部 */
     .article-header {
         margin-bottom: 2.5rem;
         padding-bottom: 1.5rem;
-        border-bottom: 1px solid #e4eaf1;
+        border-bottom: 1px solid var(--border);
     }
     .article-title {
         font-size: clamp(1.5rem, 3vw, 2rem);
         font-weight: 800;
-        color: #2c3e50;
+        color: var(--text-strong);
         margin-bottom: 1rem;
         line-height: 1.4;
     }
@@ -43,7 +116,7 @@
         flex-wrap: wrap;
         gap: 1.2rem;
         font-size: 0.85rem;
-        color: #94a3b8;
+        color: var(--text-faint);
     }
     .meta-item {
         display: flex;
@@ -55,15 +128,15 @@
         font-weight: 600;
         padding: 0.2rem 0.7rem;
         border-radius: 20px;
-        background: rgba(91, 140, 189, 0.08);
-        color: #5b8cbd;
+        background: var(--accent-chip-bg);
+        color: var(--accent);
     }
 
     /* 文章正文 */
     .article-content {
         font-size: 1rem;
         line-height: 1.9;
-        color: #2c3e50;
+        color: var(--text);
     }
     .article-content h1,
     .article-content h2,
@@ -71,10 +144,10 @@
     .article-content h4 {
         margin: 2rem 0 1rem;
         font-weight: 700;
-        color: #1e293b;
+        color: var(--text-strong);
     }
-    .article-content h1 { font-size: 1.6rem; border-bottom: 2px solid #e4eaf1; padding-bottom: 0.5rem; }
-    .article-content h2 { font-size: 1.35rem; border-bottom: 1px solid #f4f7fb; padding-bottom: 0.4rem; }
+    .article-content h1 { font-size: 1.6rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+    .article-content h2 { font-size: 1.35rem; border-bottom: 1px solid var(--border-soft); padding-bottom: 0.4rem; }
     .article-content h3 { font-size: 1.15rem; }
     .article-content h4 { font-size: 1.05rem; }
     .article-content p { margin-bottom: 1rem; }
@@ -84,13 +157,13 @@
 
     /* 行内代码 */
     .article-content code {
-        background: #f4f7fb;
-        color: #3b7cb8;
+        background: var(--bg-soft);
+        color: var(--code-inline);
         padding: 2px 7px;
         border-radius: 5px;
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         font-size: 0.88rem;
-        border: 1px solid #e4eaf1;
+        border: 1px solid var(--border);
     }
 
     /* 代码块 */
@@ -99,8 +172,8 @@
         margin: 1.5rem 0;
     }
     .article-content pre {
-        background: #f8fafc;
-        border: 1px solid #e4eaf1;
+        background: var(--bg-soft);
+        border: 1px solid var(--border);
         border-radius: 10px;
         padding: 1.2rem;
         overflow-x: auto;
@@ -109,19 +182,21 @@
     .article-content pre code {
         background: none;
         padding: 0;
-        color: #334155;
+        color: var(--code-block-text);
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         font-size: 0.85rem;
         line-height: 1.7;
         border: none;
     }
+    /* 让 highlight.js 主题的背景跟随容器，避免色块割裂 */
+    .article-content pre code.hljs { background: transparent; padding: 0; }
     .copy-button {
         position: absolute;
         top: 8px;
         right: 8px;
-        background: #ffffff;
-        color: #64748b;
-        border: 1px solid #e4eaf1;
+        background: var(--bg-control);
+        color: var(--text-muted);
+        border: 1px solid var(--border);
         padding: 5px 12px;
         border-radius: 6px;
         cursor: pointer;
@@ -131,17 +206,17 @@
         z-index: 10;
     }
     .code-block-wrapper:hover .copy-button { opacity: 1; }
-    .copy-button:hover { background: #f4f7fb; border-color: #5b8cbd; color: #5b8cbd; }
-    .copy-button.copied { background: #d4edda; border-color: #28a745; color: #155724; }
+    .copy-button:hover { background: var(--bg-soft); border-color: var(--accent); color: var(--accent); }
+    .copy-button.copied { background: var(--copied-bg); border-color: var(--copied-border); color: var(--copied-text); }
 
     /* 引用块 */
     .article-content blockquote {
-        border-left: 3px solid #5b8cbd;
+        border-left: 3px solid var(--accent);
         padding: 0.8rem 1.2rem;
         margin: 1.5rem 0;
-        background: #f4f7fb;
+        background: var(--bg-soft);
         border-radius: 0 8px 8px 0;
-        color: #64748b;
+        color: var(--text-muted);
     }
     .article-content blockquote p { margin-bottom: 0; }
 
@@ -154,16 +229,16 @@
     }
     .article-content table th,
     .article-content table td {
-        border: 1px solid #e4eaf1;
+        border: 1px solid var(--border);
         padding: 10px 14px;
         text-align: left;
     }
     .article-content table th {
-        background: #f4f7fb;
+        background: var(--bg-soft);
         font-weight: 600;
-        color: #2c3e50;
+        color: var(--text-strong);
     }
-    .article-content table tr:hover td { background: #fafbfc; }
+    .article-content table tr:hover td { background: var(--bg-softer); }
 
     .article-content img {
         max-width: 100%;
@@ -172,42 +247,93 @@
         margin: 1.5rem 0;
     }
     .article-content a {
-        color: #5b8cbd;
+        color: var(--accent);
         text-decoration: none;
         border-bottom: 1px solid transparent;
         transition: border-color 0.2s;
     }
-    .article-content a:hover { border-bottom-color: #5b8cbd; }
+    .article-content a:hover { border-bottom-color: var(--accent); }
     .article-content hr {
         border: none;
         height: 1px;
-        background: #e4eaf1;
+        background: var(--border);
         margin: 2rem 0;
+    }
+
+    /* 右上角浮动操作按钮 */
+    .floating-actions {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 999;
+    }
+
+    .floating-button {
+        height: 44px;
+        background: var(--bg-control);
+        color: var(--text-strong);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    }
+    .floating-button:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+    }
+    .floating-button:active { transform: translateY(0); }
+    .floating-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .round-button {
+        width: 44px;
+        border-radius: 50%;
+        padding: 0;
     }
 
     /* 大纲按钮 */
     .toc-button {
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        background: #ffffff;
-        color: #2c3e50;
-        border: 1px solid #e4eaf1;
-        padding: 10px 18px;
+        padding: 0 18px;
         border-radius: 25px;
-        cursor: pointer;
         font-size: 0.85rem;
-        display: flex;
-        align-items: center;
         gap: 6px;
-        box-shadow: 0 2px 8px rgba(92, 140, 189, 0.08);
-        transition: all 0.3s ease;
-        z-index: 999;
     }
-    .toc-button:hover {
-        border-color: #5b8cbd;
-        color: #5b8cbd;
-        box-shadow: 0 4px 16px rgba(92, 140, 189, 0.15);
+
+    /* 主题切换按钮 */
+    .theme-toggle {
+        overflow: hidden;
+    }
+
+    .theme-toggle .icon {
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    }
+    .theme-toggle .icon-sun {
+        color: #f59e0b;
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+    }
+    .theme-toggle .icon-moon {
+        color: #d6a456;
+        opacity: 0;
+        transform: rotate(-90deg) scale(0.6);
+    }
+    :root[data-theme="dark"] .theme-toggle .icon-sun {
+        opacity: 0;
+        transform: rotate(90deg) scale(0.6);
+    }
+    :root[data-theme="dark"] .theme-toggle .icon-moon {
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
     }
 
     /* 大纲侧边栏 */
@@ -217,9 +343,9 @@
         right: -350px;
         width: 350px;
         height: 100vh;
-        background: #ffffff;
-        border-left: 1px solid #e4eaf1;
-        box-shadow: -4px 0 20px rgba(0,0,0,0.08);
+        background: var(--bg-container);
+        border-left: 1px solid var(--border);
+        box-shadow: var(--shadow-side);
         z-index: 2000;
         transition: right 0.3s ease;
         display: flex;
@@ -228,7 +354,7 @@
     .toc-sidebar.show { right: 0; }
     .toc-header {
         padding: 1.2rem 1.5rem;
-        border-bottom: 1px solid #e4eaf1;
+        border-bottom: 1px solid var(--border);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -236,19 +362,19 @@
     .toc-title {
         font-size: 1rem;
         font-weight: 700;
-        color: #2c3e50;
+        color: var(--text-strong);
     }
     .toc-close {
         background: none;
         border: none;
         font-size: 1.5rem;
-        color: #94a3b8;
+        color: var(--text-faint);
         cursor: pointer;
         padding: 4px 8px;
         border-radius: 6px;
         transition: all 0.2s;
     }
-    .toc-close:hover { background: #f4f7fb; color: #2c3e50; }
+    .toc-close:hover { background: var(--bg-soft); color: var(--text-strong); }
     .toc-content {
         padding: 1rem 1.2rem;
         overflow-y: auto;
@@ -261,21 +387,21 @@
         border-radius: 6px;
         display: flex;
         align-items: center;
-        color: #64748b;
+        color: var(--text-muted);
         font-size: 0.85rem;
         border-left: 2px solid transparent;
     }
     .toc-item:hover {
-        background: #f4f7fb;
-        color: #5b8cbd;
+        background: var(--bg-soft);
+        color: var(--accent);
     }
     .toc-item.active {
-        background: #eaf2f9;
-        color: #5b8cbd;
-        border-left-color: #5b8cbd;
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-left-color: var(--accent);
         font-weight: 600;
     }
-    .toc-item.h2 { padding-left: 4px; font-weight: 600; color: #2c3e50; }
+    .toc-item.h2 { padding-left: 4px; font-weight: 600; color: var(--text-strong); }
     .toc-item.h3 { padding-left: 20px; font-size: 0.82rem; }
     .toc-item.h4 { padding-left: 36px; font-size: 0.8rem; }
     .toc-item.h5 { padding-left: 52px; font-size: 0.78rem; }
@@ -289,21 +415,61 @@
             border-left: none;
             border-right: none;
         }
-        .toc-button { top: 70px; right: 10px; padding: 8px 14px; font-size: 0.8rem; }
+        .floating-actions { top: 12px; right: 10px; gap: 8px; }
+        .floating-button { height: 38px; }
+        .round-button { width: 38px; }
+        .toc-button { padding: 0 14px; font-size: 0.8rem; }
+        .theme-toggle .icon { width: 18px; height: 18px; }
         .toc-sidebar { width: 280px; right: -280px; }
         .article-meta { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
     }
 </style>
-<!-- 代码高亮 -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
-{% endblock %}
-
-{% block content %}
+<!-- 代码高亮（浅色 / 深色） -->
+<link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai-sublime.min.css" disabled>
+<script>
+    // 提前应用保存的主题，避免初始闪烁
+    (function () {
+        try {
+            var saved = localStorage.getItem('muxue-theme');
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var theme = saved || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {}
+    })();
+</script>
+</head>
+<body>
 <div class="article-page">
-    <!-- 大纲按钮 -->
-    <button class="toc-button" id="toc-button">
-        <i class="fa fa-list"></i> 大纲
-    </button>
+    <div class="floating-actions">
+        <!-- 回顶部按钮 -->
+        <button class="floating-button round-button back-top-button" id="back-top-button" type="button" aria-label="回到顶部" title="回到顶部">
+            <i class="fa fa-arrow-up" aria-hidden="true"></i>
+        </button>
+
+        <!-- 主题切换按钮 -->
+        <button class="floating-button round-button theme-toggle" id="theme-toggle" type="button" aria-label="切换主题" title="切换深色 / 浅色主题">
+            <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="4"></circle>
+                <line x1="12" y1="2.5" x2="12" y2="5"></line>
+                <line x1="12" y1="19" x2="12" y2="21.5"></line>
+                <line x1="2.5" y1="12" x2="5" y2="12"></line>
+                <line x1="19" y1="12" x2="21.5" y2="12"></line>
+                <line x1="4.8" y1="4.8" x2="6.6" y2="6.6"></line>
+                <line x1="17.4" y1="17.4" x2="19.2" y2="19.2"></line>
+                <line x1="4.8" y1="19.2" x2="6.6" y2="17.4"></line>
+                <line x1="17.4" y1="6.6" x2="19.2" y2="4.8"></line>
+            </svg>
+            <svg class="icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+            </svg>
+        </button>
+
+        <!-- 大纲按钮 -->
+        <button class="floating-button toc-button" id="toc-button" type="button">
+            <i class="fa fa-list"></i> 大纲
+        </button>
+    </div>
 
     <!-- 大纲侧边栏 -->
     <div class="toc-sidebar" id="toc-sidebar">
@@ -335,9 +501,9 @@
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
+<!-- Font Awesome 图标库（提供大纲按钮/meta 图标） -->
+<link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <!-- 代码高亮 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
@@ -348,6 +514,8 @@
         hljs.highlightAll();
         addCopyButtons();
         initTOC();
+        initThemeToggle();
+        initBackTop();
     });
 
     function addCopyButtons() {
@@ -449,5 +617,42 @@
         }, { rootMargin: '-20% 0px -70% 0px' });
         headings.forEach(function(h) { observer.observe(h); });
     }
+
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        var light = document.getElementById('hljs-light');
+        var dark = document.getElementById('hljs-dark');
+        if (light && dark) {
+            // 通过 disabled 让浏览器只应用其中一个高亮主题
+            light.disabled = (theme === 'dark');
+            dark.disabled = (theme !== 'dark');
+        }
+        var btn = document.getElementById('theme-toggle');
+        if (btn) {
+            btn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+            btn.title = theme === 'dark' ? '切换到浅色主题' : '切换到深色主题';
+        }
+    }
+
+    function initThemeToggle() {
+        var btn = document.getElementById('theme-toggle');
+        if (!btn) return;
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        applyTheme(current);
+        btn.addEventListener('click', function () {
+            var next = (document.documentElement.getAttribute('data-theme') === 'dark') ? 'light' : 'dark';
+            applyTheme(next);
+            try { localStorage.setItem('muxue-theme', next); } catch (e) {}
+        });
+    }
+
+    function initBackTop() {
+        var btn = document.getElementById('back-top-button');
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
 </script>
-{% endblock %}
+</body>
+</html>

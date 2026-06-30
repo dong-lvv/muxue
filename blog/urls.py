@@ -9,4 +9,6 @@ urlpatterns = [
     path('api/search/', views.search_articles, name='search_articles'),
     # Admin 批量上传图片
     path('api/article/<int:article_id>/upload-images/', views.upload_article_images, name='upload_article_images'),
+    # Admin 导入整篇笔记文件夹（md + img/）
+    path('admin/import-note/', views.import_note, name='import_note'),
 ]

@@ -137,12 +137,14 @@
         background: #ffffff;
         border: 1px solid #e4eaf1;
         border-radius: 14px;
-        padding: 1.5rem;
+        padding: 1.25rem;
         transition: all 0.3s ease;
         cursor: pointer;
         box-shadow: 0 1px 3px rgba(92, 140, 189, 0.04);
         display: flex;
         flex-direction: column;
+        height: 150px;
+        min-height: 150px;
     }
     .article-card:hover {
         transform: translateY(-2px);
@@ -152,16 +154,32 @@
     .article-card.featured {
         border-left: 3px solid #5b8cbd;
     }
+    .default-section {
+        margin-bottom: 2rem;
+    }
+    .default-section + .default-section {
+        padding-top: 0.5rem;
+    }
     .article-title {
         font-size: 1.05rem;
         font-weight: 700;
         color: #2c3e50;
-        margin-bottom: 0.6rem;
+        margin-bottom: 0;
         line-height: 1.4;
+        height: 2.8em;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .article-tags {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.45rem;
         flex-wrap: wrap;
+        min-height: 24px;
+        margin-top: 0.75rem;
     }
     .featured-badge {
         background: rgba(217, 119, 6, 0.1);
@@ -191,12 +209,22 @@
         font-size: 0.78rem;
         color: #94a3b8;
         padding-top: 0.8rem;
+        margin-top: auto;
         border-top: 1px solid #f4f7fb;
     }
     .article-meta span {
         display: flex;
         align-items: center;
         gap: 0.3rem;
+    }
+    .category-badge {
+        background: rgba(91, 140, 189, 0.08);
+        color: #5b8cbd;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        white-space: nowrap;
     }
 
     /* ---- 状态 ---- */
@@ -270,10 +298,74 @@
     <!-- 右侧内容区 -->
     <div class="content-area">
         <div id="articles-container">
-            <div class="empty-state">
-                <i class="fa fa-folder-open"></i>
-                <h3>选择分类</h3>
-                <p>请选择左侧分类查看文章</p>
+            <div id="default-content">
+                <section class="default-section">
+                    <div class="content-header">
+                        <h2 class="content-title">
+                            推荐文章
+                            <span class="count-badge">{{ featured_articles|length }} 篇</span>
+                        </h2>
+                    </div>
+                    {% if featured_articles %}
+                    <div class="articles-grid">
+                        {% for article in featured_articles %}
+                        <div class="article-card featured" onclick="openArticle({{ article.id }})">
+                            <div class="article-title">
+                                {{ article.title }}
+                            </div>
+                            <div class="article-tags">
+                                <span class="featured-badge">推荐</span>
+                                <span class="category-badge">{{ article.category.name }}</span>
+                            </div>
+                            <div class="article-meta">
+                                <span><i class="fa fa-calendar"></i> {{ article.published_at|date:"Y-m-d" }}</span>
+                                <span><i class="fa fa-eye"></i> {{ article.view_count }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fa fa-star-o"></i>
+                        <h3>暂无推荐文章</h3>
+                        <p>可以在后台把文章标记为推荐</p>
+                    </div>
+                    {% endif %}
+                </section>
+
+                <section class="default-section">
+                    <div class="content-header">
+                        <h2 class="content-title">
+                            最近更新
+                            <span class="count-badge">{{ recent_articles|length }} 篇</span>
+                        </h2>
+                    </div>
+                    {% if recent_articles %}
+                    <div class="articles-grid">
+                        {% for article in recent_articles %}
+                        <div class="article-card {% if article.is_featured %}featured{% endif %}" onclick="openArticle({{ article.id }})">
+                            <div class="article-title">
+                                {{ article.title }}
+                            </div>
+                            <div class="article-tags">
+                                {% if article.is_featured %}<span class="featured-badge">推荐</span>{% endif %}
+                                <span class="category-badge">{{ article.category.name }}</span>
+                            </div>
+                            <div class="article-meta">
+                                <span><i class="fa fa-calendar"></i> {{ article.updated_at|date:"Y-m-d" }}</span>
+                                <span><i class="fa fa-eye"></i> {{ article.view_count }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fa fa-file-text-o"></i>
+                        <h3>暂无文章</h3>
+                        <p>发布文章后会显示最近更新</p>
+                    </div>
+                    {% endif %}
+                </section>
             </div>
         </div>
     </div>
@@ -281,10 +373,12 @@
 
 <script>
     let currentCategoryId = null;
+    let defaultContentHtml = '';
 
     document.addEventListener('DOMContentLoaded', function() {
         const menuItems = document.querySelectorAll('.menu-item[data-category-id]');
         const searchInput = document.getElementById('search-input');
+        defaultContentHtml = document.getElementById('articles-container').innerHTML;
 
         menuItems.forEach(item => {
             item.addEventListener('click', function(e) {
@@ -301,12 +395,8 @@
             if (keyword.length >= 2) {
                 searchArticles(keyword);
             } else if (keyword.length === 0) {
-                document.getElementById('articles-container').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fa fa-folder-open"></i>
-                        <h3>选择分类</h3>
-                        <p>请选择左侧分类查看文章</p>
-                    </div>`;
+                currentCategoryId = null;
+                document.getElementById('articles-container').innerHTML = defaultContentHtml;
                 menuItems.forEach(menu => menu.classList.remove('active'));
             }
         });
@@ -346,14 +436,17 @@
         }
         const html = `
             <div class="content-header">
-                <h2 class="content-title">${categoryName} <span class="count-badge">${articles.length} 篇</span></h2>
+                <h2 class="content-title">${escapeHtml(categoryName)} <span class="count-badge">${articles.length} 篇</span></h2>
             </div>
             <div class="articles-grid">
                 ${articles.map(article => `
                     <div class="article-card ${article.is_featured ? 'featured' : ''}" onclick="openArticle(${article.id})">
                         <div class="article-title">
-                            ${article.title}
+                            ${escapeHtml(article.title)}
+                        </div>
+                        <div class="article-tags">
                             ${article.is_featured ? '<span class="featured-badge">推荐</span>' : ''}
+                            ${article.category_name ? `<span class="category-badge">${escapeHtml(article.category_name)}</span>` : ''}
                         </div>
                         <div class="article-meta">
                             <span><i class="fa fa-calendar"></i> ${article.published_at}</span>
@@ -363,6 +456,12 @@
                 `).join('')}
             </div>`;
         container.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+        return String(text ?? '').replace(/[&<>"']/g, function(ch) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+        });
     }
 
     function searchArticles(keyword) {

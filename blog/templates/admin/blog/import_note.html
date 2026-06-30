@@ -1,0 +1,386 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">首页</a> &rsaquo;
+    <a href="{% url 'admin:app_list' app_label='blog' %}">Blog</a> &rsaquo;
+    <a href="{% url 'admin:blog_article_changelist' %}">博客文章</a> &rsaquo;
+    导入笔记
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+.imp-wrap { max-width: 980px; margin: 20px auto; }
+.imp-card { background:#fff; border:1px solid #e4eaf1; border-radius:12px; padding:24px 28px; box-shadow:0 2px 12px rgba(92,140,189,.06); }
+.imp-title { margin:0 0 4px; color:#2c3e50; font-size:20px; font-weight:700; }
+.imp-sub { color:#94a3b8; font-size:13px; margin-bottom:20px; }
+.row { margin-bottom:14px; }
+.row > label { display:block; color:#2c3e50; font-weight:600; margin-bottom:6px; font-size:13px; }
+.row input[type=text], .row select { width:100%; padding:9px 12px; border:1px solid #e4eaf1; border-radius:8px; background:#fff; color:#2c3e50; font-size:14px; outline:none; box-sizing:border-box; }
+.row input[type=text]:focus, .row select:focus { border-color:#5b8cbd; }
+.checkrow { display:flex; gap:24px; align-items:center; }
+.checkrow label { display:flex; gap:6px; align-items:center; cursor:pointer; font-weight:500; color:#2c3e50; }
+.drops { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+@media (max-width: 720px) { .drops { grid-template-columns: 1fr; } }
+.drop { border:2px dashed #cbd5e1; border-radius:10px; padding:22px 16px; text-align:center; background:#f8fafc; transition:all .2s; cursor:pointer; min-height:150px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; }
+.drop.drag { border-color:#5b8cbd; background:#eaf2f9; }
+.drop.ok { border-style:solid; border-color:#5b8cbd; background:#f4f9fd; }
+.drop .big { font-size:1.8rem; }
+.drop .hint { color:#2c3e50; font-size:13px; font-weight:600; }
+.drop .sub { color:#94a3b8; font-size:12px; }
+.drop .picked { color:#2c3e50; font-size:12px; margin-top:6px; word-break:break-all; line-height:1.6; }
+.drop .badge { display:inline-block; padding:1px 8px; border-radius:10px; font-size:11px; background:#eaf2f9; color:#5b8cbd; margin-right:6px; }
+.clear-btn { margin-top:6px; background:transparent; border:none; color:#94a3b8; font-size:11px; cursor:pointer; text-decoration:underline; }
+.clear-btn:hover { color:#5b8cbd; }
+.actions { margin-top:22px; display:flex; gap:12px; align-items:center; }
+.btn-primary { background:#5b8cbd; color:#fff; border:none; padding:10px 22px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; }
+.btn-primary:disabled { background:#bdc3c7; cursor:not-allowed; }
+.btn-secondary { background:#fff; color:#64748b; border:1px solid #e4eaf1; padding:10px 18px; border-radius:8px; font-size:13px; cursor:pointer; text-decoration:none; }
+.progress { display:none; margin-top:14px; height:6px; background:#e4eaf1; border-radius:3px; overflow:hidden; }
+.progress > i { display:block; height:100%; width:0%; background:linear-gradient(90deg,#5b8cbd,#4a7eae); transition:width .2s; }
+.status { margin-top:8px; font-size:12px; color:#64748b; }
+.result-ok { margin-top:14px; padding:12px 14px; background:#d4edda; color:#155724; border-radius:8px; font-size:13px; }
+.result-err { margin-top:14px; padding:12px 14px; background:#f8d7da; color:#721c24; border-radius:8px; font-size:13px; }
+.tips { margin-top:18px; font-size:12px; color:#94a3b8; line-height:1.8; }
+.tips code { background:#f4f7fb; padding:1px 6px; border-radius:4px; color:#5b8cbd; }
+</style>
+
+<div class="imp-wrap">
+    <div class="imp-card">
+        <h2 class="imp-title">📥 导入笔记</h2>
+        <p class="imp-sub">分别拖入一份 <code>.md</code> 主文件（必需）和一个 <code>img/</code> 目录或多张图片（可选）。</p>
+
+        <form id="imp-form">
+            {% csrf_token %}
+
+            <div class="row">
+                <label>所属分类</label>
+                <select id="imp-category" required>
+                    <option value="">— 请选择分类 —</option>
+                    {% for c in categories %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="row">
+                <label>文章标题（留空则使用 .md 文件名）</label>
+                <input type="text" id="imp-title" placeholder="例如：Codex 使用指南">
+            </div>
+            <div class="row checkrow">
+                <label><input type="checkbox" id="imp-published" checked> 立即发布</label>
+                <label><input type="checkbox" id="imp-featured"> 标记为推荐</label>
+            </div>
+
+            <div class="row">
+                <label>笔记文件</label>
+                <div class="drops">
+                    <div id="md-drop" class="drop" tabindex="0">
+                        <span class="big">📝</span>
+                        <span class="hint">拖入 .md 文件（必需）</span>
+                        <span class="sub">或点击选择单个 Markdown 文件</span>
+                        <div id="md-picked" class="picked" style="display:none;"></div>
+                        <input id="md-input" type="file" accept=".md,text/markdown" style="display:none;">
+                    </div>
+                    <div id="img-drop" class="drop" tabindex="0">
+                        <span class="big">🖼️</span>
+                        <span class="hint">拖入 img/ 目录或多张图片（可选）</span>
+                        <span class="sub">JPG / PNG / GIF / SVG / WebP</span>
+                        <div id="img-picked" class="picked" style="display:none;"></div>
+                        <input id="img-input" type="file" multiple accept="image/*" style="display:none;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn-primary" id="imp-submit" disabled>开始导入</button>
+                <a class="btn-secondary" href="{% url 'admin:blog_article_changelist' %}">取消</a>
+            </div>
+
+            <div class="progress" id="imp-progress"><i id="imp-progress-fill"></i></div>
+            <div class="status" id="imp-status"></div>
+            <div id="imp-result"></div>
+        </form>
+
+        <div class="tips">
+            Markdown 里图片建议写 <code>![](img/xxx.png)</code> 或 <code>./img/xxx.png</code>；导入时按文件名自动改写到 <code>img/&lt;保存后的文件名&gt;</code>，同名图片会自动加序号；http(s) 链接保持不变。
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var IMG_EXT = ['png','jpg','jpeg','gif','webp','svg','bmp'];
+    var importUrl = '{% url "import_note" %}';
+
+    var mdDrop = document.getElementById('md-drop');
+    var mdInput = document.getElementById('md-input');
+    var mdPicked = document.getElementById('md-picked');
+    var imgDrop = document.getElementById('img-drop');
+    var imgInput = document.getElementById('img-input');
+    var imgPicked = document.getElementById('img-picked');
+    var form = document.getElementById('imp-form');
+    var submitBtn = document.getElementById('imp-submit');
+    var titleInput = document.getElementById('imp-title');
+    var categorySel = document.getElementById('imp-category');
+    var publishedCb = document.getElementById('imp-published');
+    var featuredCb = document.getElementById('imp-featured');
+    var progress = document.getElementById('imp-progress');
+    var progressFill = document.getElementById('imp-progress-fill');
+    var statusEl = document.getElementById('imp-status');
+    var resultEl = document.getElementById('imp-result');
+
+    var mdFile = null;
+    var imageItems = [];
+
+    function extOf(name) {
+        var i = name.lastIndexOf('.');
+        return i >= 0 ? name.slice(i + 1).toLowerCase() : '';
+    }
+    function basename(p) { return p.replace(/\\/g, '/').split('/').pop(); }
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, function (c) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+        });
+    }
+    function getCookie(name) {
+        var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+        return m ? decodeURIComponent(m[1]) : '';
+    }
+    function updateSubmit() {
+        submitBtn.disabled = !mdFile || !categorySel.value;
+    }
+    categorySel.addEventListener('change', updateSubmit);
+
+    function bindDrop(zone) {
+        ['dragenter','dragover'].forEach(function (ev) {
+            zone.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); zone.classList.add('drag'); });
+        });
+        ['dragleave','drop'].forEach(function (ev) {
+            zone.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); zone.classList.remove('drag'); });
+        });
+    }
+    bindDrop(mdDrop);
+    bindDrop(imgDrop);
+
+    mdDrop.addEventListener('click', function () { mdInput.click(); });
+    imgDrop.addEventListener('click', function () { imgInput.click(); });
+    mdDrop.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); mdInput.click(); }
+    });
+    imgDrop.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); imgInput.click(); }
+    });
+
+    mdInput.addEventListener('change', function () {
+        if (mdInput.files && mdInput.files[0]) setMdFile(mdInput.files[0]);
+    });
+    imgInput.addEventListener('change', function () {
+        var items = [];
+        for (var i = 0; i < imgInput.files.length; i++) {
+            var f = imgInput.files[i];
+            items.push({ file: f, relPath: f.webkitRelativePath || f.name });
+        }
+        addImages(items);
+    });
+
+    mdDrop.addEventListener('drop', function (e) {
+        readDataTransfer(e.dataTransfer).then(function (items) {
+            var md = pickMd(items);
+            if (!md) { renderMd('未识别到 .md 文件', true); return; }
+            setMdFile(md.file);
+            var imgs = filterImages(items.filter(function (it) { return it !== md; }));
+            if (imgs.length) addImages(imgs);
+        });
+    });
+    imgDrop.addEventListener('drop', function (e) {
+        readDataTransfer(e.dataTransfer).then(function (items) {
+            var imgs = filterImages(items);
+            if (!imgs.length) { renderImg('未识别到图片文件', true); return; }
+            addImages(imgs);
+        });
+    });
+
+    function pickMd(items) {
+        var mds = items.filter(function (it) { return extOf(it.file.name) === 'md'; });
+        if (!mds.length) return null;
+        mds.sort(function (a, b) {
+            var da = a.relPath.split('/').length, db = b.relPath.split('/').length;
+            if (da !== db) return da - db;
+            return a.file.name.length - b.file.name.length;
+        });
+        return mds[0];
+    }
+    function filterImages(items) {
+        return items.filter(function (it) { return IMG_EXT.indexOf(extOf(it.file.name)) >= 0; });
+    }
+
+    function readDataTransfer(dt) {
+        return new Promise(function (resolve) {
+            var out = [];
+            if (dt.items && dt.items.length && typeof dt.items[0].webkitGetAsEntry === 'function') {
+                var tasks = [];
+                for (var i = 0; i < dt.items.length; i++) {
+                    var item = dt.items[i];
+                    var entry = item.webkitGetAsEntry && item.webkitGetAsEntry();
+                    if (entry) tasks.push(walkEntry(entry, '', out));
+                    else if (item.kind === 'file') {
+                        var f = item.getAsFile();
+                        if (f) out.push({ file: f, relPath: f.name });
+                    }
+                }
+                Promise.all(tasks).then(function () { resolve(out); });
+            } else if (dt.files && dt.files.length) {
+                for (var j = 0; j < dt.files.length; j++) {
+                    var ff = dt.files[j];
+                    out.push({ file: ff, relPath: ff.webkitRelativePath || ff.name });
+                }
+                resolve(out);
+            } else {
+                resolve(out);
+            }
+        });
+    }
+    function walkEntry(entry, prefix, out) {
+        return new Promise(function (resolve) {
+            if (entry.isFile) {
+                entry.file(function (file) {
+                    out.push({ file: file, relPath: prefix + entry.name });
+                    resolve();
+                }, function () { resolve(); });
+            } else if (entry.isDirectory) {
+                var reader = entry.createReader();
+                var subdir = prefix + entry.name + '/';
+                var readAll = function () {
+                    reader.readEntries(function (entries) {
+                        if (!entries.length) return resolve();
+                        Promise.all(entries.map(function (en) { return walkEntry(en, subdir, out); })).then(readAll);
+                    }, function () { resolve(); });
+                };
+                readAll();
+            } else { resolve(); }
+        });
+    }
+
+    function setMdFile(f) {
+        mdFile = f;
+        if (!titleInput.value) titleInput.value = f.name.replace(/\.md$/i, '');
+        renderMd();
+        updateSubmit();
+    }
+    function addImages(items) {
+        var keyOf = function (it) { return it.file.name + '|' + it.file.size; };
+        var exist = {};
+        imageItems.forEach(function (it) { exist[keyOf(it)] = true; });
+        items.forEach(function (it) {
+            if (!exist[keyOf(it)]) { imageItems.push(it); exist[keyOf(it)] = true; }
+        });
+        renderImg();
+    }
+
+    function renderMd(msg, isError) {
+        if (msg) {
+            mdPicked.style.display = 'block';
+            mdPicked.innerHTML = '<span style="color:' + (isError ? '#c0392b' : '#5b8cbd') + '">' + escapeHtml(msg) + '</span>';
+            mdDrop.classList.remove('ok');
+            return;
+        }
+        if (!mdFile) { mdPicked.style.display = 'none'; mdDrop.classList.remove('ok'); return; }
+        mdDrop.classList.add('ok');
+        mdPicked.style.display = 'block';
+        var kb = (mdFile.size / 1024).toFixed(1);
+        mdPicked.innerHTML =
+            '<span class="badge">MD</span><strong>' + escapeHtml(mdFile.name) + '</strong> · ' + kb + ' KB' +
+            ' <button type="button" class="clear-btn" id="md-clear">移除</button>';
+        document.getElementById('md-clear').onclick = function (e) {
+            e.stopPropagation();
+            mdFile = null; mdInput.value = ''; renderMd(); updateSubmit();
+        };
+    }
+    function renderImg(msg, isError) {
+        if (msg) {
+            imgPicked.style.display = 'block';
+            imgPicked.innerHTML = '<span style="color:' + (isError ? '#c0392b' : '#5b8cbd') + '">' + escapeHtml(msg) + '</span>';
+            return;
+        }
+        if (!imageItems.length) { imgPicked.style.display = 'none'; imgDrop.classList.remove('ok'); return; }
+        imgDrop.classList.add('ok');
+        imgPicked.style.display = 'block';
+        var sample = imageItems.slice(0, 6).map(function (it) { return escapeHtml(basename(it.relPath)); }).join('、');
+        imgPicked.innerHTML =
+            '<span class="badge">图片</span>共 <strong>' + imageItems.length + '</strong> 张：' + sample + (imageItems.length > 6 ? ' …' : '') +
+            ' <button type="button" class="clear-btn" id="img-clear">清空</button>';
+        document.getElementById('img-clear').onclick = function (e) {
+            e.stopPropagation();
+            imageItems = []; imgInput.value = ''; renderImg();
+        };
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!mdFile) return;
+        var csrf = getCookie('csrftoken') || (form.querySelector('[name=csrfmiddlewaretoken]') || {}).value || '';
+        var fd = new FormData();
+        fd.append('csrfmiddlewaretoken', csrf);
+        fd.append('category_id', categorySel.value);
+        fd.append('title', titleInput.value.trim());
+        if (publishedCb.checked) fd.append('is_published', '1');
+        if (featuredCb.checked) fd.append('is_featured', '1');
+        fd.append('markdown', mdFile, mdFile.name);
+        imageItems.forEach(function (it) {
+            fd.append('images', it.file, basename(it.relPath));
+            fd.append('image_paths', it.relPath);
+        });
+
+        submitBtn.disabled = true;
+        progress.style.display = 'block';
+        progressFill.style.width = '10%';
+        statusEl.textContent = '正在上传 ' + (1 + imageItems.length) + ' 个文件...';
+        resultEl.innerHTML = '';
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', importUrl, true);
+        xhr.setRequestHeader('X-CSRFToken', csrf);
+        xhr.upload.onprogress = function (ev) {
+            if (ev.lengthComputable) {
+                var pct = Math.max(10, Math.round(ev.loaded / ev.total * 90));
+                progressFill.style.width = pct + '%';
+            }
+        };
+        xhr.onload = function () {
+            progressFill.style.width = '100%';
+            var data = null;
+            try { data = JSON.parse(xhr.responseText); } catch (err) { }
+            if (xhr.status >= 200 && xhr.status < 300 && data && data.success) {
+                statusEl.textContent = '✅ 导入完成：文章 #' + data.article_id + '（' + data.image_count + ' 张图片）';
+                resultEl.innerHTML =
+                    '<div class="result-ok">' +
+                    '✅ 已创建：<strong>' + escapeHtml(data.title) + '</strong>' +
+                    ' &nbsp; <a href="' + data.view_url + '" target="_blank" style="color:#155724;text-decoration:underline;">前台预览 ↗</a>' +
+                    ' &nbsp; <a href="' + data.admin_url + '" style="color:#155724;text-decoration:underline;">进入编辑 →</a>' +
+                    '</div>';
+                submitBtn.textContent = '再导入一个';
+                submitBtn.disabled = false;
+                mdFile = null; imageItems = [];
+                mdInput.value = ''; imgInput.value = '';
+                renderMd(); renderImg();
+                titleInput.value = '';
+            } else {
+                var err = (data && data.error) || ('HTTP ' + xhr.status);
+                statusEl.textContent = '';
+                resultEl.innerHTML = '<div class="result-err">❌ ' + escapeHtml(err) + '</div>';
+                submitBtn.disabled = false;
+            }
+        };
+        xhr.onerror = function () {
+            progressFill.style.width = '100%';
+            statusEl.textContent = '';
+            resultEl.innerHTML = '<div class="result-err">❌ 网络错误</div>';
+            submitBtn.disabled = false;
+        };
+        xhr.send(fd);
+    });
+})();
+</script>
+{% endblock %}

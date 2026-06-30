@@ -3,8 +3,12 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.safestring import mark_safe
+from django.contrib.admin.views.decorators import staff_member_required
+from django.urls import reverse
 from .models import Category, Article, ArticleImage
 import json
+import os
+import posixpath
 import markdown
 import re
 from django.conf import settings
@@ -13,8 +17,17 @@ from django.conf import settings
 def blog(request):
     """博客页面视图"""
     categories = Category.objects.filter(is_active=True).order_by('order', 'id')
+    featured_articles = Article.objects.filter(
+        is_published=True,
+        is_featured=True,
+    ).select_related('category').order_by('-published_at', '-created_at')
+    recent_articles = Article.objects.filter(
+        is_published=True,
+    ).select_related('category').order_by('-updated_at', '-published_at')[:3]
     context = {
-        'categories': categories
+        'categories': categories,
+        'featured_articles': featured_articles,
+        'recent_articles': recent_articles,
     }
     return render(request, 'blog.html', context)
 
@@ -84,6 +97,7 @@ def get_articles_by_category(request, category_id):
                 'summary': summary,
                 'view_count': article.view_count,
                 'published_at': article.published_at.strftime('%Y-%m-%d'),
+                'category_name': article.category.name,
                 'is_featured': article.is_featured
             })
 
@@ -144,6 +158,7 @@ def search_articles(request):
                 'summary': summary,
                 'view_count': article.view_count,
                 'published_at': article.published_at.strftime('%Y-%m-%d'),
+                'category_name': article.category.name,
                 'is_featured': article.is_featured
             })
 
@@ -188,3 +203,158 @@ def upload_article_images(request, article_id):
         'failed': failed,
         'total': len(uploaded),
     })
+
+
+# ==================== Admin 笔记文件夹导入 ====================
+
+ALLOWED_IMAGE_EXT = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp'}
+
+
+def _normalize_rel_path(p: str) -> str:
+    """统一成 posix 风格、去掉开头的 ./"""
+    if not p:
+        return ''
+    p = p.replace('\\', '/')
+    while p.startswith('./'):
+        p = p[2:]
+    return p
+
+
+def _rewrite_image_refs_in_markdown(text, saved_images):
+    """把 md 中对图片的相对引用改写到 img/<basename>。
+
+    saved_images: List[Tuple[rel_in_upload, basename_saved]]
+    匹配策略：以引用路径的 basename 命中。外链 / 绝对路径不动。
+    """
+    if not saved_images:
+        return text
+
+    by_basename = {}
+    for rel, base in saved_images:
+        by_basename[os.path.basename(rel)] = base
+
+    def is_external(p):
+        return p.startswith('http://') or p.startswith('https://') or p.startswith('/')
+
+    def md_replacer(m):
+        alt = m.group(1)
+        path = m.group(2).strip()
+        if is_external(path):
+            return m.group(0)
+        base = posixpath.basename(path.replace('\\', '/'))
+        if base in by_basename:
+            return f'![{alt}](img/{by_basename[base]})'
+        return m.group(0)
+
+    text = re.sub(r'!\[(.*?)\]\(([^)]+)\)', md_replacer, text)
+
+    def html_replacer(m):
+        before = m.group(1)
+        src = m.group(2).strip()
+        if is_external(src):
+            return m.group(0)
+        base = posixpath.basename(src.replace('\\', '/'))
+        if base in by_basename:
+            return f'<img{before}src="img/{by_basename[base]}"'
+        return m.group(0)
+
+    text = re.sub(r'<img([^>]+)src=["\']([^"\']+)["\']', html_replacer, text, flags=re.IGNORECASE)
+    return text
+
+
+@staff_member_required
+def import_note(request):
+    """导入一个笔记文件夹：一个 .md + 同级 img/ 目录里的图片。"""
+    categories = Category.objects.filter(is_active=True).order_by('order', 'id')
+
+    if request.method == 'GET':
+        return render(request, 'admin/blog/import_note.html', {
+            'categories': categories,
+            'title': '导入笔记文件夹',
+        })
+
+    try:
+        category_id = request.POST.get('category_id')
+        title_override = request.POST.get('title', '').strip()
+        is_published = request.POST.get('is_published') == '1'
+        is_featured = request.POST.get('is_featured') == '1'
+
+        if not category_id:
+            return JsonResponse({'success': False, 'error': '请选择文章分类'})
+        try:
+            category = Category.objects.get(pk=category_id, is_active=True)
+        except Category.DoesNotExist:
+            return JsonResponse({'success': False, 'error': '分类不存在或已禁用'})
+
+        md_file = request.FILES.get('markdown')
+        if not md_file:
+            return JsonResponse({'success': False, 'error': '没有找到 Markdown 文件'})
+        if not md_file.name.lower().endswith('.md'):
+            return JsonResponse({'success': False, 'error': 'Markdown 文件必须以 .md 结尾'})
+
+        md_bytes = md_file.read()
+        try:
+            md_text = md_bytes.decode('utf-8-sig')
+        except UnicodeDecodeError:
+            try:
+                md_text = md_bytes.decode('gbk')
+            except Exception:
+                return JsonResponse({'success': False, 'error': 'Markdown 文件编码无法识别（请使用 UTF-8 / GBK）'})
+
+        if title_override:
+            title = title_override
+        else:
+            title = os.path.splitext(os.path.basename(md_file.name))[0]
+
+        image_files = request.FILES.getlist('images')
+        image_paths = request.POST.getlist('image_paths')
+        if len(image_paths) != len(image_files):
+            image_paths = [f.name for f in image_files]
+
+        article = Article.objects.create(
+            title=title,
+            content=md_text,
+            category=category,
+            is_published=is_published,
+            is_featured=is_featured,
+        )
+
+        saved_images = []
+        seen_basenames = {}
+        skipped = []
+        for f, rel in zip(image_files, image_paths):
+            ext = os.path.splitext(f.name)[1].lower()
+            if ext not in ALLOWED_IMAGE_EXT:
+                skipped.append(f.name)
+                continue
+            rel_norm = _normalize_rel_path(rel) or f.name
+            base = os.path.basename(rel_norm)
+
+            if base in seen_basenames:
+                seen_basenames[base] += 1
+                stem, e = os.path.splitext(base)
+                base = f'{stem}_{seen_basenames[base]}{e}'
+            else:
+                seen_basenames[base] = 0
+
+            f.name = base
+            ArticleImage.objects.create(article=article, image=f, caption='')
+            saved_images.append((rel_norm, base))
+
+        if saved_images:
+            new_content = _rewrite_image_refs_in_markdown(article.content, saved_images)
+            if new_content != article.content:
+                article.content = new_content
+                article.save(update_fields=['content'])
+
+        return JsonResponse({
+            'success': True,
+            'article_id': article.id,
+            'title': article.title,
+            'image_count': len(saved_images),
+            'skipped': skipped,
+            'admin_url': reverse('admin:blog_article_change', args=[article.id]),
+            'view_url': reverse('article_detail', args=[article.id]),
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'导入失败: {e}'})

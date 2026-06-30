@@ -26,4 +26,8 @@ class ArticleAdmin(admin.ModelAdmin):
     ordering = ['-published_at']
     date_hierarchy = 'published_at'
     readonly_fields = ['view_count', 'created_at', 'updated_at']
-    inlines = [ArticleImageInline]
+    change_list_template = 'admin/blog/article/change_list.html'
+
+    def get_inlines(self, request, obj=None):
+        # 新建文章时不显示“上传文章配图”内联；编辑已有文章再显示
+        return [ArticleImageInline] if obj else []
