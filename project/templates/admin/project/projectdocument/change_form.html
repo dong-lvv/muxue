@@ -1,0 +1,124 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block after_field_sets %}
+{% if original and original.pk %}
+<div style="background:#ffffff;border:1px solid #e4eaf1;border-radius:12px;padding:20px;margin:20px 0;box-shadow:0 2px 12px rgba(92,140,189,0.06);">
+    <h3 style="margin:0 0 4px;color:#2c3e50;font-size:15px;">📷 拖拽上传项目文档配图</h3>
+    <p style="margin:0 0 16px;color:#94a3b8;font-size:12px;">
+        图片存入 <code style="background:#f4f7fb;padding:1px 6px;border-radius:4px;color:#5b8cbd;">media/project/{{ original.pk }}/img/</code>
+        &nbsp; Markdown 引用：<code style="background:#f4f7fb;padding:1px 6px;border-radius:4px;color:#5b8cbd;">![说明](img/文件名)</code>
+    </p>
+
+    <!-- 拖拽区 -->
+    <div id="drop-zone" style="
+        border:2px dashed #cbd5e1;border-radius:10px;padding:30px;text-align:center;
+        background:#f8fafc;transition:all 0.3s;cursor:pointer;
+    ">
+        <span style="font-size:2rem;display:block;margin-bottom:8px;">📂</span>
+        <span style="color:#64748b;font-size:13px;">拖拽图片到这里，或点击选择</span>
+        <span style="color:#94a3b8;font-size:11px;display:block;margin-top:4px;">支持多文件批量上传 · JPG/PNG/GIF/SVG/WebP</span>
+        <input type="file" id="file-input" multiple accept="image/*" style="display:none;">
+    </div>
+
+    <!-- 进度条 -->
+    <div id="progress-bar" style="display:none;margin-top:12px;height:6px;background:#e4eaf1;border-radius:3px;overflow:hidden;">
+        <div id="progress-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#5b8cbd,#4a7eae);transition:width 0.3s;border-radius:3px;"></div>
+    </div>
+    <div id="progress-text" style="display:none;text-align:center;color:#64748b;font-size:12px;margin-top:6px;"></div>
+
+    <!-- 上传结果 -->
+    <div id="upload-result" style="margin-top:12px;"></div>
+
+    <!-- 已上传图片列表 -->
+    <div id="image-gallery" style="margin-top:16px;display:flex;flex-wrap:wrap;gap:12px;"></div>
+</div>
+
+<script>
+(function() {
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const progressBar = document.getElementById('progress-bar');
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+    const resultDiv = document.getElementById('upload-result');
+    const gallery = document.getElementById('image-gallery');
+    const documentId = {{ original.pk }};
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => uploadFiles(fileInput.files));
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#5b8cbd';
+        dropZone.style.background = '#eaf2f9';
+    });
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#cbd5e1';
+        dropZone.style.background = '#f8fafc';
+    });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#cbd5e1';
+        dropZone.style.background = '#f8fafc';
+        if (e.dataTransfer.files.length > 0) uploadFiles(e.dataTransfer.files);
+    });
+
+    function uploadFiles(files) {
+        if (files.length === 0) return;
+        const formData = new FormData();
+        for (let f of files) formData.append('images', f);
+
+        progressBar.style.display = 'block';
+        progressText.style.display = 'block';
+        progressText.textContent = `正在上传 ${files.length} 个文件...`;
+        progressFill.style.width = '30%';
+        resultDiv.innerHTML = '';
+
+        fetch(`/project/docs/${documentId}/upload-images/`, {
+            method: 'POST',
+            body: formData,
+        })
+        .then(r => r.json())
+        .then(data => {
+            progressFill.style.width = '100%';
+            if (data.success) {
+                progressText.textContent = `✅ 成功上传 ${data.total} 个文件`;
+                resultDiv.innerHTML = '<div style="color:#155724;background:#d4edda;padding:8px 12px;border-radius:6px;font-size:12px;margin-top:8px;">✅ 上传成功！Markdown 引用：<code style="background:#fff;padding:1px 4px;border-radius:3px;">![说明](img/文件名)</code></div>';
+                data.uploaded.forEach(img => addImageCard(img.filename, img.url));
+            } else {
+                progressText.textContent = '❌ 上传失败';
+                resultDiv.innerHTML = `<div style="color:#721c24;background:#f8d7da;padding:8px 12px;border-radius:6px;font-size:12px;margin-top:8px;">❌ ${data.error}</div>`;
+            }
+            setTimeout(() => { progressBar.style.display = 'none'; progressText.style.display = 'none'; progressFill.style.width = '0%'; }, 3000);
+        })
+        .catch(err => {
+            progressText.textContent = '❌ 网络错误';
+            progressFill.style.width = '100%';
+            progressFill.style.background = '#e74c3c';
+            resultDiv.innerHTML = `<div style="color:#721c24;background:#f8d7da;padding:8px 12px;border-radius:6px;font-size:12px;margin-top:8px;">❌ ${err.message}</div>`;
+        });
+    }
+
+    function addImageCard(filename, url) {
+        const mdRef = `![${filename}](img/${filename})`;
+        const card = document.createElement('div');
+        card.style.cssText = 'width:140px;background:#fff;border:1px solid #e4eaf1;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(92,140,189,0.04);';
+        card.innerHTML = `
+            <div style="height:100px;background:#f4f7fb;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                <img src="${url}" alt="${filename}" style="max-width:100%;max-height:100%;object-fit:contain;">
+            </div>
+            <div style="padding:6px 8px;">
+                <div style="font-size:11px;color:#2c3e50;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${filename}">${filename}</div>
+                <button onclick="navigator.clipboard.writeText('${mdRef}');this.textContent='已复制';setTimeout(()=>this.textContent='复制MD',1500);"
+                    style="margin-top:4px;padding:2px 8px;font-size:10px;border:1px solid #e4eaf1;border-radius:4px;background:#f8fafc;color:#5b8cbd;cursor:pointer;width:100%;">
+                    复制 MD
+                </button>
+            </div>`;
+        gallery.prepend(card);
+    }
+})();
+</script>
+{% endif %}
+{% endblock %}

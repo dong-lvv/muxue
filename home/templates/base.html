@@ -529,6 +529,9 @@
                     <a href="{% url 'blog' %}" class="navbar-link {% if 'blog' in request.resolver_match.app_names %}active{% endif %}">学习</a>
                 </li>
                 <li class="navbar-item">
+                    <a href="{% url 'project:project_list' %}" class="navbar-link {% if 'project' in request.resolver_match.app_names %}active{% endif %}">项目</a>
+                </li>
+                <li class="navbar-item">
                     <a href="{% url 'download_center' %}" class="navbar-link {% if 'download' in request.resolver_match.app_names %}active{% endif %}">下载</a>
                 </li>
                 <li class="navbar-item">
@@ -559,6 +562,7 @@
         {% block content %}{% endblock %}
     </div>
 
+    {% block footer %}
     <!-- 页脚 -->
     <footer class="site-footer">
         <div class="footer-inner">
@@ -582,6 +586,7 @@
             <p>© {% now "Y" %} 暮雪 Muxue <span class="snowflake">❄</span> 雪落无声，代码有痕</p>
         </div>
     </footer>
+    {% endblock %}
 
     <!-- 登录弹窗 -->
     <div class="modal-overlay" id="login-modal">
@@ -1130,4 +1135,3 @@
     {% block extra_js %}{% endblock %}
 </body>
 </html>
-

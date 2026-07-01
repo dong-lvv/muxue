@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'home.apps.HomeConfig',
     'blog.apps.BlogConfig',
+    'project.apps.ProjectConfig',
     'download.apps.DownloadConfig',
     'about.apps.AboutConfig',
     'user.apps.UserConfig',
@@ -57,7 +58,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1",
+    "http://localhost",
     "http://localhost",
     "http://www.muxue.site",
     "https://www.muxue.site",
@@ -173,4 +174,3 @@ DEFAULT_FROM_EMAIL = 'Muxue <muxuemail@163.com>'
 # 163邮箱: EMAIL_HOST = 'smtp.163.com', EMAIL_PORT = 465, EMAIL_USE_SSL = True
 # QQ邮箱: EMAIL_HOST = 'smtp.qq.com', EMAIL_PORT = 465, EMAIL_USE_SSL = True
 # 企业邮箱: 根据服务商提供的SMTP配置
-

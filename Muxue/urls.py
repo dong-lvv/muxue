@@ -25,6 +25,7 @@ urlpatterns = [
     path('', home_views.index, name='index'),
     path('home/', home_views.home, name='home'),
     path('blog/', include('blog.urls')),
+    path('project/', include('project.urls')),
     path('download/', include('download.urls')),
     path('about/', include('about.urls')),
     path('user/', include('user.urls')),
