@@ -71,5 +71,4 @@ class ProjectUpdateAdmin(admin.ModelAdmin):
     list_display = ('project', 'happened_at')
     list_filter = ('project', 'happened_at')
     search_fields = ('project__title', 'content')
-    date_hierarchy = 'happened_at'
     ordering = ('-happened_at',)
