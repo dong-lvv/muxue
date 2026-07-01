@@ -3,6 +3,7 @@ from django.db.models import Sum
 from .models import Action
 from blog.models import Category, Article
 from user.models import User
+from project.models import Project
 
 def index(request):
     """首页视图 - 重定向到home"""
@@ -25,6 +26,7 @@ def home(request):
         'featured_articles': featured_articles,
         'latest_articles': latest_articles,
         'article_count': Article.objects.filter(is_published=True).count(),
+        'project_count': Project.objects.filter(is_published=True).count(),
         'category_count': categories.count(),
         'total_views': Article.objects.filter(is_published=True).aggregate(
             total=Sum('view_count')

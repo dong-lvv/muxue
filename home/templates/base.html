@@ -78,6 +78,7 @@
             width: 48px;
             height: 48px;
             margin-right: 12px;
+            margin-left: -20px;
             vertical-align: middle;
         }
         .navbar-brand {
@@ -409,71 +410,7 @@
             margin-top: 60px;
         }
 
-        /* ===== 页脚 ===== */
-        .site-footer {
-            background: linear-gradient(180deg, #f4f7fb 0%, #eaf2f9 100%);
-            border-top: 1px solid var(--border-light);
-            padding: 3rem 2rem 1.5rem;
-            margin-top: 3rem;
-        }
-        .footer-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
-        }
-        .footer-col h4 {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--second-color);
-            margin-bottom: 1rem;
-            position: relative;
-            padding-bottom: 0.5rem;
-        }
-        .footer-col h4::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 32px;
-            height: 2px;
-            background: var(--accent);
-            border-radius: 1px;
-        }
-        .footer-col p,
-        .footer-col a {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            line-height: 1.8;
-            text-decoration: none;
-            display: block;
-            transition: color 0.2s;
-        }
-        .footer-col a:hover {
-            color: var(--accent);
-        }
-        .footer-bottom {
-            max-width: 1200px;
-            margin: 2rem auto 0;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border-light);
-            text-align: center;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-        .footer-bottom .snowflake {
-            display: inline-block;
-            animation: footer-snow 3s ease-in-out infinite;
-        }
-        @keyframes footer-snow {
-            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.6; }
-            50% { transform: translateY(-4px) rotate(180deg); opacity: 1; }
-        }
-        @media (max-width: 768px) {
-            .footer-inner { grid-template-columns: 1fr; text-align: center; }
-            .footer-col h4::after { left: 50%; transform: translateX(-50%); }
-        }
+        /* ===== 页脚已删除 ===== */
 
         /* 响应式设计 */
         @media (max-width: 768px) {
@@ -561,32 +498,6 @@
     <div class="main-content">
         {% block content %}{% endblock %}
     </div>
-
-    {% block footer %}
-    <!-- 页脚 -->
-    <footer class="site-footer">
-        <div class="footer-inner">
-            <div class="footer-col">
-                <h4><span class="snowflake">❄</span> 暮雪</h4>
-                <p>嵌入式系统学习平台，专注 STM32 / FreeRTOS / Linux 驱动开发与项目实战。</p>
-            </div>
-            <div class="footer-col">
-                <h4>快速导航</h4>
-                <a href="{% url 'blog' %}">📖 学习教程</a>
-                <a href="{% url 'download_center' %}">📥 资源下载</a>
-                <a href="{% url 'about' %}">💬 关于我们</a>
-            </div>
-            <div class="footer-col">
-                <h4>联系方式</h4>
-                <p>📧 muxuemail@163.com</p>
-                <p>🌐 www.muxue.site</p>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>© {% now "Y" %} 暮雪 Muxue <span class="snowflake">❄</span> 雪落无声，代码有痕</p>
-        </div>
-    </footer>
-    {% endblock %}
 
     <!-- 登录弹窗 -->
     <div class="modal-overlay" id="login-modal">
