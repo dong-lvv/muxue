@@ -83,7 +83,7 @@ def get_articles_by_category(request, category_id):
         articles = Article.objects.filter(
             category=category,
             is_published=True
-        ).order_by('-published_at', '-created_at')
+        ).order_by('published_at', 'created_at')
 
         articles_data = []
         for article in articles:
@@ -144,7 +144,7 @@ def search_articles(request):
         articles = Article.objects.filter(
             title__icontains=keyword,
             is_published=True
-        ).order_by('-published_at', '-created_at')
+        ).order_by('published_at', 'created_at')
 
         articles_data = []
         for article in articles:

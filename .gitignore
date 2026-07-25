@@ -8,3 +8,5 @@ __pycache__/
 *.sqlite3
 .env
 mysql_data/
+media/blog/
+media/project/
